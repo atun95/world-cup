@@ -360,3 +360,51 @@ header{
 /* Flags in live ticker */
 .ticker-flag{font-size:18px;}
 
+/* ── BỔ SUNG TỐI ƯU SỬA LỖI TRÊN MOBILE ── */
+@media (max-width: 600px) {
+  /* Ép phần ruột container không được sinh khoảng trống quá lớn */
+  .container {
+    padding: 8px !important;
+  }
+  
+  /* Giúp bảng xếp hạng không bị tràn màn hình điện thoại */
+  .standings-grid {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    overflow-x: auto;
+  }
+  .standing-table-card {
+    width: 100% !important;
+    overflow-x: auto; /* Tự xuất hiện cuộn ngang nếu bảng quá dài */
+  }
+
+  /* Thu nhỏ bớt chữ ở header trên điện thoại để không bị nhảy dòng */
+  header {
+    padding: 10px !important;
+    gap: 6px !important;
+  }
+  .logo-container h1 {
+    font-size: 14px !important;
+  }
+  .time-badge {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  .sync-btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Thu nhỏ các thẻ Dashboard widget để xếp vừa 2 cột */
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .widget-card {
+    padding: 10px !important;
+    gap: 8px !important;
+  }
+  .widget-value {
+    font-size: 18px !important;
+  }
+}
