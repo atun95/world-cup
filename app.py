@@ -2,29 +2,49 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 
-# Cấu hình trang Streamlit (hiển thị full màn hình)
+# 1. Cấu hình trang hiển thị FULL MÀN HÌNH (Bắt buộc phải đặt ở đầu file)
 st.set_page_config(
     page_title="CupPulse 2026 – World Cup Tracker",
     page_icon="⚽",
-    layout="wide"
+    layout="wide",  # Thiết lập chế độ màn hình rộng
+    initial_sidebar_state="collapsed"
 )
 
-# Thao tác đọc các file nguồn
+# 2. Hack CSS để xóa padding thừa của Streamlit, ép component chiếm 100% không gian
+st.markdown("""
+    <style>
+        /* Xóa khoảng cách trống ở đỉnh và 2 bên màn hình */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+            max-width: 100% !important;
+        }
+        /* Định hình khung chứa iframe luôn full width */
+        iframe {
+            width: 100% !important;
+            border: none !important;
+        }
+        #MainMenu, footer {visibility: hidden;} /* Ẩn menu mặc định của Streamlit nếu muốn trang sạch hơn */
+    </style>
+""", unsafe_allow_html=True)
+
+# Hàm đọc và gộp các file mã nguồn
 def load_web_app():
-    # 1. Đọc nội dung file index.html
+    # Đọc nội dung file index.html
     with open("index.html", "r", encoding="utf-8") as f:
         html_content = f.read()
 
-    # 2. Đọc nội dung file styles.css và nhúng vào head
+    # Nhúng file styles.css vào head
     if os.path.exists("styles.css"):
         with open("styles.css", "r", encoding="utf-8") as f:
             css_content = f.read()
         style_tag = f"<style>{css_content}</style>"
         html_content = html_content.replace('<link rel="stylesheet" href="styles.css">', style_tag)
 
-    # 3. Đọc nội dung file data.js và app.js để nhúng vào trước thẻ đóng </body>
+    # Nhúng data.js và app.js vào cuối body
     js_bundle = ""
-    
     if os.path.exists("data.js"):
         with open("data.js", "r", encoding="utf-8") as f:
             js_bundle += f"\n{f.read()}\n"
@@ -41,13 +61,13 @@ def load_web_app():
 
     return html_content
 
-# Gọi hàm load toàn bộ nội dung đã gộp
+# Tiến hành render ứng dụng
 try:
     final_html = load_web_app()
     
-    # Hiển thị ứng dụng Web lên Streamlit. 
-    # Chiều cao (height) đặt 1200 hoặc lớn hơn để thoải mái cuộn xem lịch thi đấu và bảng xếp hạng.
-    components.html(final_html, height=1200, scrolling=True)
+    # Đặt chiều cao lớn (height=2000 hoặc hơn) để chứa đủ 12 bảng đấu và danh sách trận đấu 
+    # mà không bị xuất hiện 2 thanh cuộn lồng nhau (Double Scrollbar) gây khó chịu UX.
+    components.html(final_html, height=2200, scrolling=True)
 
 except Exception as e:
     st.error(f"Đã xảy ra lỗi khi nạp giao diện: {e}")
