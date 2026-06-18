@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Sửa lại CSS để giao diện FULL vừa vặn, không bị phóng quá to làm mất nội dung
+# 2. Cấu hình CSS tối ưu cho cả PC lẫn MOBILE
 st.markdown("""
     <style>
         /* Xóa khoảng trống mặc định của Streamlit */
@@ -22,16 +22,16 @@ st.markdown("""
             max-width: 100% !important;
         }
         
-        /* Cấu hình khung Iframe chứa ứng dụng */
+        /* Cấu hình khung chứa ứng dụng */
         iframe {
             display: block;
-            width: 100% !important;
-            max-width: 1400px !important; /* Giới hạn độ rộng vừa phải để hiển thị Dashboard đẹp nhất */
-            margin: 0 auto !important;     /* Căn giữa ứng dụng ra giữa màn hình lớn */
+            width: 100vw !important;       /* Ép tràn hết màn hình thiết bị di động */
+            max-width: 1400px !important;  /* Giới hạn độ rộng trên PC để không bị quá bự */
+            margin: 0 auto !important;     /* Căn giữa trên PC */
             border: none !important;
         }
         
-        /* Ẩn các phần thừa của Streamlit */
+        /* Ẩn các thành phần thừa của Streamlit */
         #MainMenu, footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
@@ -66,7 +66,6 @@ def load_web_app():
 
 try:
     final_html = load_web_app()
-    # Nếu nội dung trang của bạn ngắn hơn, bạn có thể giảm height xuống tầm 1600-1800 cho khít
-    components.html(final_html, height=1800, scrolling=True)
+    components.html(final_html, height=2000, scrolling=True)
 except Exception as e:
     st.error(f"Đã xảy ra lỗi khi nạp giao diện: {e}")
