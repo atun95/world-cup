@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 
-# 1. Cấu hình trang (Bắt buộc ở đầu file)
+# 1. Cấu hình trang
 st.set_page_config(
     page_title="CupPulse 2026 – World Cup Tracker",
     page_icon="⚽",
@@ -10,33 +10,26 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Cấu hình CSS tối ưu cho cả PC lẫn MOBILE
+# 2. Cấu hình CSS tràn viền tuyệt đối
 st.markdown("""
     <style>
-        /* Xóa khoảng trống mặc định của Streamlit */
         .block-container {
-            padding-top: 0rem !important;
-            padding-bottom: 0rem !important;
-            padding-left: 0rem !important;
-            padding-right: 0rem !important;
+            padding: 0rem !important;
             max-width: 100% !important;
         }
-        
-        /* Cấu hình khung chứa ứng dụng */
         iframe {
             display: block;
-            width: 100vw !important;       /* Ép tràn hết màn hình thiết bị di động */
-            max-width: 1400px !important;  /* Giới hạn độ rộng trên PC để không bị quá bự */
-            margin: 0 auto !important;     /* Căn giữa trên PC */
+            width: 100vw !important;
+            max-width: 1400px !important;
+            margin: 0 auto !important;
             border: none !important;
+            /* Khóa không cho lag/giật khi cuộn */
+            overflow: hidden !important; 
         }
-        
-        /* Ẩn các thành phần thừa của Streamlit */
         #MainMenu, footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
-# --- GIỮ NGUYÊN PHẦN CODE ĐỌC FILE VÀ RENDER PHÍA DƯỚI CỦA BẠN ---
 def load_web_app():
     with open("index.html", "r", encoding="utf-8") as f:
         html_content = f.read()
@@ -58,14 +51,48 @@ def load_web_app():
             js_bundle += f"\n{f.read()}\n"
         html_content = html_content.replace('<script src="app.js"></script>', '')
 
+    # SỬA LỖI LAG: Thêm đoạn Script tự động cập nhật chiều cao thực tế lên trang mẹ Streamlit
+    auto_height_script = """
+    <script>
+        function sendHeight() {
+            const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+            window.parent.postMessage({
+                type: 'streamlit:setComponentValue',
+                value: height
+            }, '*');
+            
+            // Cập nhật lại khung height của iframe ngay lập tức
+            if (window.frameElement) {
+                window.frameElement.style.height = height + 'px';
+            }
+        }
+        // Chạy khi nạp trang xong
+        window.addEventListener('load', () => {
+            setTimeout(sendHeight, 300);
+        });
+        // Chạy lại khi người dùng bấm chuyển Tab (Matches, Standings...)
+        document.addEventListener('click', () => {
+            setTimeout(sendHeight, 100);
+        });
+        // Theo dõi sự thay đổi kích thước của trang
+        const resizeObserver = new ResizeObserver(() => sendHeight());
+        resizeObserver.observe(document.body);
+    </script>
+    """
+    
     if js_bundle:
-        script_tag = f"<script>{js_bundle}</script>"
+        script_tag = f"<script>{js_bundle}</script>{auto_height_script}"
         html_content = html_content.replace('</body>', f'{script_tag}</body>')
+    else:
+        html_content = html_content.replace('</body>', f'{auto_height_script}</body>')
 
     return html_content
 
 try:
     final_html = load_web_app()
-    components.html(final_html, height=2000, scrolling=True)
+    
+    # ĐỔI THÀNH scrolling=False để loại bỏ hoàn toàn thanh cuộn lồng, giúp cuộn mượt 100%
+    # Chiều cao ban đầu đặt tạm 1600, script phía trên sẽ tự động kéo giãn ra sau.
+    components.html(final_html, height=1600, scrolling=False)
 except Exception as e:
     st.error(f"Đã xảy ra lỗi khi nạp giao diện: {e}")
