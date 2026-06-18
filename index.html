@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CupPulse 2026 – World Cup Results Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Theo dõi kết quả, bảng xếp hạng và lịch thi đấu World Cup 2026 theo thời gian thực.">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <span class="logo-ball">⚽</span>
+      <div>
+        <h1>CUPPULSE 2026</h1>
+        <span class="logo-sub">FIFA World Cup Tracker</span>
+      </div>
+    </div>
+
+    <div class="header-center" id="live-count-badge"></div>
+
+    <div class="header-right">
+      <div class="time-badge" id="current-time-badge">📅 --/--/2026</div>
+      <button class="sync-btn" id="btn-sync-data" onclick="syncOfficialData(true)" title="Cập nhật tất cả kết quả, bảng xếp hạng và lịch thi đấu">
+        <span id="sync-icon">🔄</span> Cập Nhật Tất Cả
+      </button>
+    </div>
+  </header>
+
+  <!-- Live Ticker -->
+  <div class="live-banner" id="live-banner-section">
+    <div class="live-badge-glow">🔴 TRỰC TIẾP</div>
+    <div class="live-ticker-matches" id="live-ticker-container">
+      <div class="ticker-placeholder">Không có trận nào đang diễn ra trực tiếp</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="container">
+
+    <!-- Dashboard -->
+    <div class="dashboard-grid">
+      <div class="widget-card">
+        <div class="widget-icon">⚽</div>
+        <div class="widget-info">
+          <div class="widget-value" id="w-played">0 / 104</div>
+          <div class="widget-label">Trận đã hoàn thành</div>
+        </div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-icon">🥅</div>
+        <div class="widget-info">
+          <div class="widget-value text-green" id="w-goals">0</div>
+          <div class="widget-label">Tổng bàn thắng</div>
+        </div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-icon">📡</div>
+        <div class="widget-info">
+          <div class="widget-value text-pink" id="w-live">0</div>
+          <div class="widget-label">Đang trực tiếp</div>
+        </div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-icon">📅</div>
+        <div class="widget-info">
+          <div class="widget-value text-cyan" id="w-upcoming">0</div>
+          <div class="widget-label">Sắp diễn ra</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('matches-tab', this)">⚽ Lịch &amp; Kết Quả</button>
+      <button class="tab-btn" onclick="switchTab('standings-tab', this)">📊 Bảng Xếp Hạng</button>
+      <button class="tab-btn" onclick="switchTab('odds-tab', this)">📈 Kết Quả Kèo</button>
+      <button class="tab-btn" onclick="switchTab('knockout-tab', this)">🏆 Vòng KO</button>
+    </div>
+
+    <!-- Tab 1: Matches -->
+    <div id="matches-tab" class="tab-content active">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Trạng thái:</label>
+          <select id="filter-status" onchange="renderMatches()">
+            <option value="all">Tất cả</option>
+            <option value="live">🔴 Trực tiếp</option>
+            <option value="completed">✅ Đã kết thúc</option>
+            <option value="upcoming">🕐 Sắp diễn ra</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Bảng đấu:</label>
+          <select id="filter-group-letter" onchange="renderMatches()">
+            <option value="all">Tất cả (A-L)</option>
+            <option value="A">Bảng A</option><option value="B">Bảng B</option>
+            <option value="C">Bảng C</option><option value="D">Bảng D</option>
+            <option value="E">Bảng E</option><option value="F">Bảng F</option>
+            <option value="G">Bảng G</option><option value="H">Bảng H</option>
+            <option value="I">Bảng I</option><option value="J">Bảng J</option>
+            <option value="K">Bảng K</option><option value="L">Bảng L</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Lượt:</label>
+          <select id="filter-round" onchange="renderMatches()">
+            <option value="all">Tất cả</option>
+            <option value="1">Lượt 1</option>
+            <option value="2">Lượt 2</option>
+            <option value="3">Lượt 3</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <input type="text" id="search-team" class="search-input" placeholder="🔍 Tìm đội bóng..." oninput="renderMatches()">
+        </div>
+      </div>
+      <div class="match-grid" id="matches-grid"></div>
+    </div>
+
+    <!-- Tab 2: Standings -->
+    <div id="standings-tab" class="tab-content">
+      <div class="standings-header">
+        <div class="standings-note">
+          🏆 Top 2 mỗi bảng + 8 đội hạng 3 tốt nhất đi tiếp vào Vòng 32.
+          Bảng xếp hạng được tính trực tiếp từ kết quả trận đấu chính thức.
+        </div>
+      </div>
+      <div class="standings-sync-info" id="standings-sync-info">
+        <span class="sync-status-warn">⚠️ Đang tải dữ liệu...</span>
+      </div>
+      <div class="standings-grid" id="standings-grid-container"></div>
+    </div>
+
+    <!-- Tab 3: Odds Results -->
+    <div id="odds-tab" class="tab-content">
+      <div class="odds-summary-bar" id="odds-summary-bar"></div>
+      <div class="odds-table-wrap">
+        <table class="odds-table">
+          <thead>
+            <tr>
+              <th>Trận đấu</th>
+              <th style="text-align:center">Tỉ số</th>
+              <th>Kèo Chấp Châu Á</th>
+              <th>Kèo Tài Xỉu</th>
+            </tr>
+          </thead>
+          <tbody id="odds-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:40px">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 4: Knockout -->
+    <div id="knockout-tab" class="tab-content">
+      <div class="knockout-placeholder">
+        <div class="ko-icon">🏆</div>
+        <h3>Vòng Loại Trực Tiếp</h3>
+        <p>Sẽ được cập nhật sau khi vòng bảng kết thúc (29/06/2026).</p>
+        <p style="margin-top:8px; font-size:12px; color:var(--text-muted);">Nhấn <strong>🔄 Cập Nhật</strong> để tải dữ liệu mới nhất.</p>
+      </div>
+      <div id="knockout-grid"></div>
+    </div>
+
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
