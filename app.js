@@ -3,7 +3,7 @@
 
 let state = { matches: [], lastSync: null, syncSource: null };
 
-const VALID_GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+const VALID_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 // ──────────────────────────────────────────────
 // KHỞI ĐỘNG
@@ -68,11 +68,11 @@ function renderAll() {
 
 function updateTimeBadge() {
   const now = new Date();
-  const d = now.getDate().toString().padStart(2,"0");
-  const mo = (now.getMonth()+1).toString().padStart(2,"0");
+  const d = now.getDate().toString().padStart(2, "0");
+  const mo = (now.getMonth() + 1).toString().padStart(2, "0");
   const y = now.getFullYear();
-  const h = now.getHours().toString().padStart(2,"0");
-  const mi = now.getMinutes().toString().padStart(2,"0");
+  const h = now.getHours().toString().padStart(2, "0");
+  const mi = now.getMinutes().toString().padStart(2, "0");
   const el = document.getElementById("current-time-badge");
   if (el) el.textContent = `📅 ${d}/${mo}/${y} ${h}:${mi}`;
 }
@@ -85,11 +85,11 @@ function updateDashboard() {
   const live = state.matches.filter(m => m.status === "live");
   const upcoming = state.matches.filter(m => m.status === "upcoming");
   const totalGoals = completed.reduce((s, m) => s + (m.score1 || 0) + (m.score2 || 0), 0)
-                   + live.reduce((s, m) => s + (m.score1 || 0) + (m.score2 || 0), 0);
+    + live.reduce((s, m) => s + (m.score1 || 0) + (m.score2 || 0), 0);
 
-  document.getElementById("w-played").textContent   = `${completed.length} / ${state.matches.length}`;
-  document.getElementById("w-goals").textContent    = totalGoals;
-  document.getElementById("w-live").textContent     = live.length;
+  document.getElementById("w-played").textContent = `${completed.length} / ${state.matches.length}`;
+  document.getElementById("w-goals").textContent = totalGoals;
+  document.getElementById("w-live").textContent = live.length;
   document.getElementById("w-upcoming").textContent = upcoming.length;
 
   // Badge live trên header
@@ -132,14 +132,14 @@ function renderMatches() {
   if (!grid) return;
 
   const statusFilter = document.getElementById("filter-status").value;
-  const groupFilter  = document.getElementById("filter-group-letter").value;
-  const roundFilter  = document.getElementById("filter-round").value;
-  const search       = (document.getElementById("search-team").value || "").toLowerCase().trim();
+  const groupFilter = document.getElementById("filter-group-letter").value;
+  const roundFilter = document.getElementById("filter-round").value;
+  const search = (document.getElementById("search-team").value || "").toLowerCase().trim();
 
   let list = state.matches.filter(m => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
-    if (groupFilter  !== "all" && m.group  !== groupFilter)  return false;
-    if (roundFilter  !== "all" && String(m.round) !== roundFilter) return false;
+    if (groupFilter !== "all" && m.group !== groupFilter) return false;
+    if (roundFilter !== "all" && String(m.round) !== roundFilter) return false;
     if (search) {
       const hay = `${m.team1.name} ${m.team2.name} ${m.team1.code} ${m.team2.code}`.toLowerCase();
       if (!hay.includes(search)) return false;
@@ -147,11 +147,11 @@ function renderMatches() {
     return true;
   });
 
-  // Sắp xếp: live lên đầu, rồi theo ngày giờ mới nhất lên đầu (giảm dần)
+  // Sắp xếp: live lên đầu, rồi theo ngày giờ
   list.sort((a, b) => {
     if (a.status === "live" && b.status !== "live") return -1;
     if (b.status === "live" && a.status !== "live") return 1;
-    return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
+    return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
   });
 
   if (list.length === 0) {
@@ -167,7 +167,7 @@ function renderMatches() {
 }
 
 function buildMatchCard(m) {
-  const isLive      = m.status === "live";
+  const isLive = m.status === "live";
   const isCompleted = m.status === "completed";
 
   // Header
@@ -191,7 +191,7 @@ function buildMatchCard(m) {
 
   // Footer info
   const dateStr = formatDate(m.date);
-  const goalsNote = isCompleted ? `Tổng: <strong>${(m.score1||0)+(m.score2||0)} bàn</strong>` : `Lượt ${m.round} • Bảng ${m.group}`;
+  const goalsNote = isCompleted ? `Tổng: <strong>${(m.score1 || 0) + (m.score2 || 0)} bàn</strong>` : `Lượt ${m.round} • Bảng ${m.group}`;
 
   return `
     <div class="match-card ${isLive ? "is-live" : ""}">
@@ -243,7 +243,7 @@ function renderStandings() {
       else if (i === 2) rowClass = "qualify-3rd";
       return `
         <tr class="${rowClass}">
-          <td class="td-rank">${i+1}</td>
+          <td class="td-rank">${i + 1}</td>
           <td><div class="td-team"><span class="td-flag">${t.emoji}</span>${t.name}</div></td>
           <td style="text-align:center">${t.played}</td>
           <td style="text-align:center">${t.won}</td>
@@ -251,7 +251,7 @@ function renderStandings() {
           <td style="text-align:center">${t.lost}</td>
           <td style="text-align:center">${t.gf}</td>
           <td style="text-align:center">${t.ga}</td>
-          <td style="text-align:center">${t.gd >= 0 ? "+"+t.gd : t.gd}</td>
+          <td style="text-align:center">${t.gd >= 0 ? "+" + t.gd : t.gd}</td>
           <td class="td-pts" style="text-align:center">${t.pts}</td>
         </tr>`;
     }).join("");
@@ -311,10 +311,10 @@ function renderKnockout() {
       <div class="knockout-round-title">${roundName}</div>
       <div class="knockout-matches-grid">
         ${matches.map(m => {
-          const isCompleted = m.status === "completed";
-          const isLive = m.status === "live";
-          const scoreStr = (isCompleted || isLive) ? `${m.score1} - ${m.score2}` : "VS";
-          return `
+    const isCompleted = m.status === "completed";
+    const isLive = m.status === "live";
+    const scoreStr = (isCompleted || isLive) ? `${m.score1} - ${m.score2}` : "VS";
+    return `
             <div class="ko-match-card">
               <div class="ko-team">
                 <span style="font-size:22px">${m.team1.emoji}</span>
@@ -326,7 +326,7 @@ function renderKnockout() {
                 <span class="ko-team-name">${m.team2.name}</span>
               </div>
             </div>`;
-        }).join("")}
+  }).join("")}
       </div>
     </div>
   `).join("");
@@ -358,7 +358,7 @@ function updateStandingsSyncInfo() {
 
   if (state.lastSync) {
     const d = new Date(state.lastSync);
-    const timeStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+    const timeStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
     const completed = state.matches.filter(m => m.status === "completed" && VALID_GROUPS.includes(m.group)).length;
     const live = state.matches.filter(m => m.status === "live").length;
     el.innerHTML = `
@@ -514,7 +514,7 @@ function calcHandicapResult(m, odds) {
     ? (m.score1 - m.score2) - odds.handicap
     : (m.score2 - m.score1) - odds.handicap;
 
-  if (effDiff >  0.01) return "fav_win";
+  if (effDiff > 0.01) return "fav_win";
   if (effDiff < -0.01) return "dog_win";
   return "push";
 }
@@ -522,9 +522,9 @@ function calcHandicapResult(m, odds) {
 function calcOUResult(m, odds) {
   if (m.score1 === null || m.score2 === null) return null;
   const total = m.score1 + m.score2;
-  if (total > odds.overUnder + 0.01) return { result:"over",  total };
-  if (total < odds.overUnder - 0.01) return { result:"under", total };
-  return { result:"push", total };
+  if (total > odds.overUnder + 0.01) return { result: "over", total };
+  if (total < odds.overUnder - 0.01) return { result: "under", total };
+  return { result: "push", total };
 }
 
 // ──────────────────────────────────────────────
@@ -539,9 +539,6 @@ function renderOddsResults() {
     m.status === "completed" && VALID_GROUPS.includes(m.group)
   );
 
-  // Sắp xếp: Trận đấu mới nhất lên đầu
-  completed.sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
-
   if (completed.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:50px">
       <div style="font-size:36px;margin-bottom:12px">⚽</div>Chưa có trận nào hoàn thành</td></tr>`;
@@ -555,7 +552,7 @@ function renderOddsResults() {
 
   const rows = completed.map(m => {
     const odds = getMatchOdds(m);
-    const hRes  = calcHandicapResult(m, odds);
+    const hRes = calcHandicapResult(m, odds);
     const ouRes = calcOUResult(m, odds);
 
     const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
@@ -565,53 +562,38 @@ function renderOddsResults() {
     if (hRes === "fav_win") favWins++;
     else if (hRes === "dog_win") dogWins++;
     else pushH++;
-    if (ouRes?.result === "over")  overs++;
+    if (ouRes?.result === "over") overs++;
     else if (ouRes?.result === "under") unders++;
     else pushOU++;
 
     // HTML kèo chấp
     const hcapLabel = odds.handicap === 0
-      ? `<span class="full-name">Đồng banh</span><span class="short-code">Đồng</span>`
-      : `<span class="full-name">${favTeam.emoji} ${favTeam.name} chấp ${odds.handicap}</span>` +
-        `<span class="short-code">${favTeam.code} chấp ${odds.handicap}</span>`;
+      ? `Đồng banh`
+      : `${favTeam.emoji} ${favTeam.name} chấp ${odds.handicap}`;
     const hcapClass = hRes === "fav_win" ? "tag-win" : hRes === "dog_win" ? "tag-lose" : "tag-push";
-    
-    const hcapTextFull = hRes === "fav_win"
+    const hcapText = hRes === "fav_win"
       ? `✅ ${favTeam.emoji} Thắng kèo`
       : hRes === "dog_win"
-      ? `❌ ${dogTeam.emoji} Bất ngờ thắng`
-      : `⚖️ Hòa kèo`;
-    const hcapTextShort = hRes === "fav_win"
-      ? `✅ Thắng`
-      : hRes === "dog_win"
-      ? `❌ Dưới`
-      : `⚖️ Hòa`;
-    const hcapText = `<span class="full-name">${hcapTextFull}</span><span class="short-code">${hcapTextShort}</span>`;
+        ? `❌ ${dogTeam.emoji} Bất ngờ thắng`
+        : `⚖️ Hòa kèo`;
 
     // HTML tài xỉu
-    const ouLabel = `<span class="full-name">Mốc ${odds.overUnder}</span><span class="short-code">Mốc ${odds.overUnder}</span>`;
+    const ouLabel = `Mốc ${odds.overUnder}`;
     const ouClass = ouRes?.result === "over" ? "tag-win" : ouRes?.result === "under" ? "tag-lose" : "tag-push";
-    
-    const ouTextFull = ouRes?.result === "over"
+    const ouText = ouRes?.result === "over"
       ? `🔼 Tài (${ouRes.total} bàn)`
       : ouRes?.result === "under"
-      ? `🔽 Xỉu (${ouRes.total} bàn)`
-      : `⚖️ Hòa (${ouRes.total} bàn)`;
-    const ouTextShort = ouRes?.result === "over"
-      ? `🔼 Tài (${ouRes.total})`
-      : ouRes?.result === "under"
-      ? `🔽 Xỉu (${ouRes.total})`
-      : `⚖️ Hòa (${ouRes.total})`;
-    const ouText = `<span class="full-name">${ouTextFull}</span><span class="short-code">${ouTextShort}</span>`;
+        ? `🔽 Xỉu (${ouRes.total} bàn)`
+        : `⚖️ Hòa (${ouRes.total} bàn)`;
 
     return `
       <tr>
         <td>
           <div class="odds-match-meta">Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}</div>
           <div class="odds-match-name">
-            <span>${m.team1.emoji}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
+            <span>${m.team1.emoji}</span> ${m.team1.name}
             <span style="color:var(--text-muted);margin:0 6px">vs</span>
-            <span>${m.team2.emoji}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
+            <span>${m.team2.emoji}</span> ${m.team2.name}
           </div>
         </td>
         <td style="text-align:center">
