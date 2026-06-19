@@ -966,6 +966,14 @@ header {
   margin-bottom: 5px;
 }
 
+.short-code {
+  display: none !important;
+}
+
+.full-name {
+  display: inline !important;
+}
+
 .odds-tag {
   display: inline-block;
   padding: 3px 10px;
@@ -1104,17 +1112,18 @@ header {
 
   .odds-table {
     font-size: 11px;
-    min-width: 520px;
+    min-width: unset;
+    width: 100%;
   }
 
   .odds-table th,
   .odds-table td {
-    padding: 8px 10px;
+    padding: 8px 6px;
     white-space: nowrap;
   }
 
   .odds-score {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .odds-match-name {
@@ -1123,5 +1132,18 @@ header {
 
   .odds-match-meta {
     font-size: 9px;
+  }
+
+  .odds-tag {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .short-code {
+    display: inline !important;
+  }
+
+  .full-name {
+    display: none !important;
   }
 }

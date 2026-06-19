@@ -34,7 +34,7 @@ st.markdown("""
                 const iframes = document.querySelectorAll('iframe');
                 iframes.forEach(iframe => {
                     if (iframe.contentWindow === e.source) {
-                        iframe.style.height = (e.data.value + 50) + 'px';
+                        iframe.style.height = (e.data.value + 10) + 'px';
                     }
                 });
             }
@@ -74,10 +74,12 @@ def load_web_app():
                 value: height
             }, '*');
             
-            // Cập nhật lại khung height của iframe ngay lập tức
-            if (window.frameElement) {
-                window.frameElement.style.height = height + 'px';
-            }
+            // Cập nhật lại khung height của iframe ngay lập tức (nếu cùng origin)
+            try {
+                if (window.frameElement) {
+                    window.frameElement.style.height = height + 'px';
+                }
+            } catch (e) {}
         }
         // Chạy khi nạp trang xong
         window.addEventListener('load', () => {

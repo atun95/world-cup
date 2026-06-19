@@ -15,6 +15,7 @@
 </head>
 
 <body>
+  <div id="app-wrapper">
 
   <!-- Header -->
   <header>
@@ -158,8 +159,14 @@
             <tr>
               <th>Trận đấu</th>
               <th style="text-align:center">Tỉ số</th>
-              <th>Kèo Chấp Châu Á</th>
-              <th>Kèo Tài Xỉu</th>
+              <th>
+                <span class="full-name">Kèo Chấp Châu Á</span>
+                <span class="short-code">Chấp</span>
+              </th>
+              <th>
+                <span class="full-name">Kèo Tài Xỉu</span>
+                <span class="short-code">Tài Xỉu</span>
+              </th>
             </tr>
           </thead>
           <tbody id="odds-tbody">
@@ -183,6 +190,7 @@
       <div id="knockout-grid"></div>
     </div>
 
+  </div>
   </div>
 
   <script src="data.js"></script>
