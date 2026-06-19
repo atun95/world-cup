@@ -28,6 +28,18 @@ st.markdown("""
         }
         #MainMenu, footer {visibility: hidden;}
     </style>
+    <svg onload="
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'streamlit:setComponentValue') {
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    if (iframe.contentWindow === e.source) {
+                        iframe.style.height = (e.data.value + 50) + 'px';
+                    }
+                });
+            }
+        });
+    " style="display:none;"></svg>
 """, unsafe_allow_html=True)
 
 def load_web_app():

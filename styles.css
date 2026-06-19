@@ -360,8 +360,19 @@ header{
 /* Flags in live ticker */
 .ticker-flag{font-size:18px;}
 
+.short-code {
+  display: none !important;
+}
+
 /* ── BỔ SUNG TỐI ƯU SỬA LỖI TRÊN MOBILE ── */
 @media (max-width: 600px) {
+  .full-name {
+    display: none !important;
+  }
+  .short-code {
+    display: inline !important;
+  }
+
   /* Ép phần ruột container không được sinh khoảng trống quá lớn */
   .container {
     padding: 8px !important;
@@ -406,5 +417,45 @@ header{
   }
   .widget-value {
     font-size: 18px !important;
+  }
+
+  /* Tối ưu hóa tab buttons trên mobile */
+  .tab-btn {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+
+  /* Tối ưu hóa bảng kèo cược trên mobile */
+  .odds-table-wrap {
+    overflow-x: hidden !important;
+  }
+  .odds-table th, .odds-table td {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+  .odds-table th {
+    font-size: 9px !important;
+  }
+  .odds-match-meta {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+  }
+  .odds-match-name {
+    font-size: 11px !important;
+    gap: 2px !important;
+  }
+  .odds-score {
+    font-size: 14px !important;
+    white-space: nowrap !important;
+  }
+  .odds-line-label {
+    font-size: 8px !important;
+    margin-bottom: 3px !important;
+  }
+  .odds-tag {
+    font-size: 9px !important;
+    padding: 2px 5px !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
   }
 }

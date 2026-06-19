@@ -147,11 +147,11 @@ function renderMatches() {
     return true;
   });
 
-  // Sắp xếp: live lên đầu, rồi theo ngày giờ
+  // Sắp xếp: live lên đầu, rồi theo ngày giờ mới nhất lên đầu (giảm dần)
   list.sort((a, b) => {
     if (a.status === "live" && b.status !== "live") return -1;
     if (b.status === "live" && a.status !== "live") return 1;
-    return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
   });
 
   if (list.length === 0) {
@@ -539,6 +539,9 @@ function renderOddsResults() {
     m.status === "completed" && VALID_GROUPS.includes(m.group)
   );
 
+  // Sắp xếp: Trận đấu mới nhất lên đầu
+  completed.sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+
   if (completed.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:50px">
       <div style="font-size:36px;margin-bottom:12px">⚽</div>Chưa có trận nào hoàn thành</td></tr>`;
@@ -568,32 +571,47 @@ function renderOddsResults() {
 
     // HTML kèo chấp
     const hcapLabel = odds.handicap === 0
-      ? `Đồng banh`
-      : `${favTeam.emoji} ${favTeam.name} chấp ${odds.handicap}`;
+      ? `<span class="full-name">Đồng banh</span><span class="short-code">Đồng</span>`
+      : `<span class="full-name">${favTeam.emoji} ${favTeam.name} chấp ${odds.handicap}</span>` +
+        `<span class="short-code">${favTeam.code} chấp ${odds.handicap}</span>`;
     const hcapClass = hRes === "fav_win" ? "tag-win" : hRes === "dog_win" ? "tag-lose" : "tag-push";
-    const hcapText  = hRes === "fav_win"
+    
+    const hcapTextFull = hRes === "fav_win"
       ? `✅ ${favTeam.emoji} Thắng kèo`
       : hRes === "dog_win"
       ? `❌ ${dogTeam.emoji} Bất ngờ thắng`
       : `⚖️ Hòa kèo`;
+    const hcapTextShort = hRes === "fav_win"
+      ? `✅ Thắng`
+      : hRes === "dog_win"
+      ? `❌ Dưới`
+      : `⚖️ Hòa`;
+    const hcapText = `<span class="full-name">${hcapTextFull}</span><span class="short-code">${hcapTextShort}</span>`;
 
     // HTML tài xỉu
-    const ouLabel = `Mốc ${odds.overUnder}`;
+    const ouLabel = `<span class="full-name">Mốc ${odds.overUnder}</span><span class="short-code">Mốc ${odds.overUnder}</span>`;
     const ouClass = ouRes?.result === "over" ? "tag-win" : ouRes?.result === "under" ? "tag-lose" : "tag-push";
-    const ouText  = ouRes?.result === "over"
+    
+    const ouTextFull = ouRes?.result === "over"
       ? `🔼 Tài (${ouRes.total} bàn)`
       : ouRes?.result === "under"
       ? `🔽 Xỉu (${ouRes.total} bàn)`
       : `⚖️ Hòa (${ouRes.total} bàn)`;
+    const ouTextShort = ouRes?.result === "over"
+      ? `🔼 Tài (${ouRes.total})`
+      : ouRes?.result === "under"
+      ? `🔽 Xỉu (${ouRes.total})`
+      : `⚖️ Hòa (${ouRes.total})`;
+    const ouText = `<span class="full-name">${ouTextFull}</span><span class="short-code">${ouTextShort}</span>`;
 
     return `
       <tr>
         <td>
           <div class="odds-match-meta">Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}</div>
           <div class="odds-match-name">
-            <span>${m.team1.emoji}</span> ${m.team1.name}
+            <span>${m.team1.emoji}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
             <span style="color:var(--text-muted);margin:0 6px">vs</span>
-            <span>${m.team2.emoji}</span> ${m.team2.name}
+            <span>${m.team2.emoji}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
           </div>
         </td>
         <td style="text-align:center">
