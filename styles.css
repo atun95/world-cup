@@ -28,7 +28,6 @@ body {
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
   background-image:
     radial-gradient(ellipse 60% 40% at 15% 0%, rgba(0, 212, 255, 0.05) 0%, transparent 60%),
     radial-gradient(ellipse 50% 40% at 85% 100%, rgba(255, 62, 108, 0.05) 0%, transparent 60%);
@@ -47,15 +46,12 @@ header {
   top: 0;
   z-index: 200;
   gap: 12px;
-  min-height: 60px;
-  width: 100%;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
 }
 
 .logo-ball {
@@ -91,7 +87,6 @@ header {
   flex: 1;
   display: flex;
   justify-content: center;
-  min-width: 0;
 }
 
 .live-count-inner {
@@ -131,7 +126,6 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
 }
 
 .time-badge {
@@ -547,6 +541,7 @@ header {
   color: var(--accent-green);
 }
 
+/* Match body - teams + score */
 .match-body {
   padding: 18px 16px;
   display: flex;
@@ -567,7 +562,6 @@ header {
 .team-flag {
   font-size: 32px;
   line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
 }
 
 .team-name {
@@ -759,9 +753,7 @@ header {
 }
 
 .td-flag {
-  font-size: 20px;
-  line-height: 1;
-  flex-shrink: 0;
+  font-size: 16px;
 }
 
 .td-pts {
@@ -865,6 +857,78 @@ header {
 .empty-state .empty-icon {
   font-size: 48px;
   margin-bottom: 12px;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .standings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .match-grid {
+    grid-template-columns: 1fr;
+  }
+
+  header {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .header-center {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .container {
+    padding: 14px;
+  }
+}
+
+@media(max-width:600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .logo-container h1 {
+    font-size: 15px;
+  }
+
+  .score-display {
+    font-size: 26px;
+  }
+
+  /* Filter bar: 1 hàng ngang, scroll nếu cần */
+  .filter-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-group label {
+    display: none;
+  }
+
+  .filter-group select,
+  .filter-group input {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .search-input {
+    width: 110px;
+  }
 }
 
 /* ── ODDS RESULTS TABLE ── */
@@ -993,80 +1057,19 @@ header {
   border: 1px solid rgba(255, 209, 77, 0.25);
 }
 
-/* ── RESPONSIVE ── */
-@media(max-width:900px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .standings-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .match-grid {
-    grid-template-columns: 1fr;
-  }
-
-  header {
-    flex-wrap: wrap;
-    padding: 12px 16px;
-  }
-
-  .header-center {
-    order: 3;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .container {
-    padding: 14px;
-  }
+/* ── ENHANCED FLAGS ── */
+.td-flag {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
-@media(max-width:600px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+.team-flag {
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
 
-  .logo-container h1 {
-    font-size: 15px;
-  }
-
-  .score-display {
-    font-size: 26px;
-  }
-
-  /* Filter bar: 2 hàng, gọn */
-  .filter-bar {
-    flex-wrap: wrap;
-    gap: 8px 10px;
-    padding-bottom: 2px;
-  }
-
-  .filter-group {
-    flex: 1;
-    min-width: calc(50% - 10px);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .filter-group label {
-    display: block;
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .filter-group select,
-  .filter-group input {
-    font-size: 12px;
-    padding: 7px 10px;
-    width: 100%;
-  }
-
-  .search-input {
-    width: 100%;
-  }
+.ticker-flag {
+  font-size: 18px;
 }
