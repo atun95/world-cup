@@ -858,10 +858,19 @@ async function syncExternalOdds(apiKey) {
       const awayTeam = getTeamFromMap(match.away_team);
       if (!homeTeam || !awayTeam) return;
       
+      // Ưu tiên chọn nhà cái Pinnacle để có tỷ lệ kèo chính xác và sát thực tế nhất
       let selectedBookmaker = match.bookmakers.find(b => 
+        b.key === "pinnacle" &&
         b.markets.some(m => m.key === "spreads") && 
         b.markets.some(m => m.key === "totals")
       );
+      
+      if (!selectedBookmaker) {
+        selectedBookmaker = match.bookmakers.find(b => 
+          b.markets.some(m => m.key === "spreads") && 
+          b.markets.some(m => m.key === "totals")
+        );
+      }
       
       if (!selectedBookmaker && match.bookmakers.length > 0) {
         selectedBookmaker = match.bookmakers[0];
@@ -887,6 +896,9 @@ async function syncExternalOdds(apiKey) {
             favoriteId = favTeam.id;
             handicap = Math.abs(favOutcome.point);
           }
+        } else {
+          favoriteId = homeTeam.id;
+          handicap = 0;
         }
       }
       
