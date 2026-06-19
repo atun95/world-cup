@@ -458,7 +458,22 @@ function parseApiMatches(apiMatches) {
       status = "live";
       minute = 45;
     } else if (date && time) {
-      const matchTime = new Date(`${date}T${time}:00`);
+      // Xử lý múi giờ từ m.time (ví dụ: "20:00 UTC-7" -> ISO offset "-07:00") để so sánh thời gian chính xác
+      const rawTime = m.time || "";
+      let tzOffset = "";
+      if (rawTime.includes("UTC")) {
+        const tzMatch = rawTime.match(/UTC([+-]\d+)/);
+        if (tzMatch) {
+          const offset = parseInt(tzMatch[1]);
+          const sign = offset >= 0 ? "+" : "-";
+          const absVal = String(Math.abs(offset)).padStart(2, "0");
+          tzOffset = `${sign}${absVal}:00`;
+        } else {
+          tzOffset = "Z"; // UTC +0
+        }
+      }
+      
+      const matchTime = new Date(`${date}T${time}:00${tzOffset}`);
       const endTime = new Date(matchTime.getTime() + 115 * 60000);
       if (now >= matchTime && now <= endTime) {
         status = "live";

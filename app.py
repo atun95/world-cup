@@ -4,7 +4,7 @@ import os
 
 # 1. Cấu hình trang
 st.set_page_config(
-    page_title="WORLD CUP 2026 – World Cup Tracker",
+    page_title="WORLD CUP 2026",
     page_icon="⚽",
     layout="wide", 
     initial_sidebar_state="collapsed"
