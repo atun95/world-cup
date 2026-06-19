@@ -6,6 +6,35 @@ let state = { matches: [], lastSync: null, syncSource: null };
 const VALID_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 // ──────────────────────────────────────────────
+// HÀM TIỆN ÍCH LẤY HÌNH ẢNH CỜ TỪ EMOJI (HỖ TRỢ WINDOWS)
+// ──────────────────────────────────────────────
+function getFlagHtml(emoji, name = "", sizeClass = "normal") {
+  if (!emoji) return "";
+  try {
+    const cp1 = emoji.codePointAt(0);
+    const cp2 = emoji.codePointAt(2);
+    const char1 = String.fromCharCode(cp1 - 0x1F1E6 + 97);
+    const char2 = String.fromCharCode(cp2 - 0x1F1E6 + 97);
+    const iso2 = (char1 + char2).toLowerCase();
+    
+    let flagUrl = `https://flagcdn.com/w40/${iso2}.png`;
+    if (emoji.includes("🏴󠁧󠁢󠁳󠁣󠁴󠁿")) {
+      flagUrl = "https://flagcdn.com/w40/gb-sct.png";
+    } else if (emoji.includes("🏴󠁧󠁢󠁥󠁮󠁧󠁿")) {
+      flagUrl = "https://flagcdn.com/w40/gb-eng.png";
+    }
+    
+    let width = 20;
+    if (sizeClass === "large") width = 24;
+    if (sizeClass === "small") width = 16;
+    
+    return `<img src="${flagUrl}" alt="${name}" class="team-flag-img ${sizeClass}" style="width:${width}px; height:auto; border-radius:2px; vertical-align:middle; display:inline-block; margin-right:4px; box-shadow:0 1px 2px rgba(0,0,0,0.3);" onerror="this.style.display='none'; this.nextSibling.style.display='inline';" /><span class="flag-fallback" style="display:none">${emoji}</span>`;
+  } catch (e) {
+    return `<span>${emoji}</span>`;
+  }
+}
+
+// ──────────────────────────────────────────────
 // KHỞI ĐỘNG
 // ──────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -114,9 +143,9 @@ function renderLiveTicker() {
 
   container.innerHTML = live.map(m => `
     <div class="ticker-card">
-      <span class="ticker-teams">${m.team1.emoji} ${m.team1.code}</span>
+      <span class="ticker-teams" style="display:inline-flex;align-items:center;gap:4px">${getFlagHtml(m.team1.emoji, m.team1.name, "small")} ${m.team1.code}</span>
       <span class="ticker-score">${m.score1} - ${m.score2}</span>
-      <span class="ticker-teams">${m.team2.code} ${m.team2.emoji}</span>
+      <span class="ticker-teams" style="display:inline-flex;align-items:center;gap:4px">${m.team2.code} ${getFlagHtml(m.team2.emoji, m.team2.name, "small")}</span>
       ${m.minute ? `<span class="ticker-min">${m.minute}'</span>` : ""}
     </div>
   `).join("");
@@ -145,11 +174,27 @@ function renderMatches() {
     return true;
   });
 
-  // Sắp xếp: live lên đầu, rồi theo ngày giờ mới nhất lên đầu (giảm dần)
+  // Sắp xếp: live lên đầu, tiếp theo là sắp diễn ra (tăng dần: gần nhất -> xa nhất), cuối cùng là đã kết thúc (giảm dần: mới nhất -> cũ nhất)
   list.sort((a, b) => {
+    // 1. Trận live lên đầu
     if (a.status === "live" && b.status !== "live") return -1;
     if (b.status === "live" && a.status !== "live") return 1;
-    return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
+    if (a.status === "live" && b.status === "live") {
+      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    }
+
+    // 2. Trận sắp diễn ra (upcoming) lên trước trận đã kết thúc (completed)
+    if (a.status === "upcoming" && b.status === "completed") return -1;
+    if (a.status === "completed" && b.status === "upcoming") return 1;
+
+    // 3. Sắp xếp trong cùng nhóm:
+    if (a.status === "upcoming" && b.status === "upcoming") {
+      // Trận sắp diễn ra: gần nhất -> xa nhất (tăng dần)
+      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    } else {
+      // Trận đã kết thúc: mới nhất -> cũ nhất (giảm dần)
+      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
+    }
   });
 
   if (list.length === 0) {
@@ -200,13 +245,13 @@ function buildMatchCard(m) {
       </div>
       <div class="match-body">
         <div class="team-side">
-          <span class="team-flag">${m.team1.emoji}</span>
+          <span class="team-flag">${getFlagHtml(m.team1.emoji, m.team1.name, "large")}</span>
           <span class="team-name">${m.team1.name}</span>
           <span class="team-rank">Elo ${m.team1.rating}</span>
         </div>
         <div class="score-center">${scoreHtml}</div>
         <div class="team-side">
-          <span class="team-flag">${m.team2.emoji}</span>
+          <span class="team-flag">${getFlagHtml(m.team2.emoji, m.team2.name, "large")}</span>
           <span class="team-name">${m.team2.name}</span>
           <span class="team-rank">Elo ${m.team2.rating}</span>
         </div>
@@ -242,7 +287,7 @@ function renderStandings() {
       return `
         <tr class="${rowClass}">
           <td class="td-rank">${i + 1}</td>
-          <td><div class="td-team"><span class="td-flag">${t.emoji}</span>${t.name}</div></td>
+          <td><div class="td-team"><span class="td-flag">${getFlagHtml(t.emoji, t.name, "normal")}</span>${t.name}</div></td>
           <td style="text-align:center">${t.played}</td>
           <td style="text-align:center">${t.won}</td>
           <td style="text-align:center">${t.drawn}</td>
@@ -315,12 +360,12 @@ function renderKnockout() {
     return `
             <div class="ko-match-card">
               <div class="ko-team">
-                <span style="font-size:22px">${m.team1.emoji}</span>
+                <span style="display:inline-flex;align-items:center;height:22px">${getFlagHtml(m.team1.emoji, m.team1.name, "large")}</span>
                 <span class="ko-team-name">${m.team1.name}</span>
               </div>
               <div class="ko-score">${scoreStr}</div>
               <div class="ko-team" style="flex-direction:row-reverse;text-align:right">
-                <span style="font-size:22px">${m.team2.emoji}</span>
+                <span style="display:inline-flex;align-items:center;height:22px">${getFlagHtml(m.team2.emoji, m.team2.name, "large")}</span>
                 <span class="ko-team-name">${m.team2.name}</span>
               </div>
             </div>`;
@@ -446,6 +491,51 @@ function parseApiMatches(apiMatches) {
     const time = parseApiTime(m.time);
     const roundNum = parseApiRound(m.round);
 
+    // Chuyển đổi date và time sang múi giờ Việt Nam (UTC+7)
+    let vnDate = date;
+    let vnTime = time;
+    let matchTime = null;
+    let tzOffset = "";
+
+    if (date && time) {
+      const rawTime = m.time || "";
+      if (rawTime.includes("UTC")) {
+        const tzMatch = rawTime.match(/UTC([+-]\d+)/);
+        if (tzMatch) {
+          const offset = parseInt(tzMatch[1]);
+          const sign = offset >= 0 ? "+" : "-";
+          const absVal = String(Math.abs(offset)).padStart(2, "0");
+          tzOffset = `${sign}${absVal}:00`;
+        } else {
+          tzOffset = "Z";
+        }
+      }
+      
+      try {
+        matchTime = new Date(`${date}T${time}:00${tzOffset}`);
+        const formatter = new Intl.DateTimeFormat("sv-SE", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        });
+        const parts = formatter.formatToParts(matchTime);
+        const y = parts.find(p => p.type === 'year').value;
+        const mo = parts.find(p => p.type === 'month').value;
+        const d = parts.find(p => p.type === 'day').value;
+        const h = parts.find(p => p.type === 'hour').value;
+        const mi = parts.find(p => p.type === 'minute').value;
+        vnDate = `${y}-${mo}-${d}`;
+        vnTime = `${h}:${mi}`;
+      } catch (e) {
+        console.error("Lỗi chuyển múi giờ VN:", e);
+      }
+    }
+
     let score1 = null, score2 = null, status = "upcoming", minute = null;
 
     if (m.score?.ft) {
@@ -457,23 +547,7 @@ function parseApiMatches(apiMatches) {
       score2 = m.score.ht[1];
       status = "live";
       minute = 45;
-    } else if (date && time) {
-      // Xử lý múi giờ từ m.time (ví dụ: "20:00 UTC-7" -> ISO offset "-07:00") để so sánh thời gian chính xác
-      const rawTime = m.time || "";
-      let tzOffset = "";
-      if (rawTime.includes("UTC")) {
-        const tzMatch = rawTime.match(/UTC([+-]\d+)/);
-        if (tzMatch) {
-          const offset = parseInt(tzMatch[1]);
-          const sign = offset >= 0 ? "+" : "-";
-          const absVal = String(Math.abs(offset)).padStart(2, "0");
-          tzOffset = `${sign}${absVal}:00`;
-        } else {
-          tzOffset = "Z"; // UTC +0
-        }
-      }
-
-      const matchTime = new Date(`${date}T${time}:00${tzOffset}`);
+    } else if (matchTime) {
       const endTime = new Date(matchTime.getTime() + 115 * 60000);
       if (now >= matchTime && now <= endTime) {
         status = "live";
@@ -483,15 +557,15 @@ function parseApiMatches(apiMatches) {
       }
     }
 
-    const key = `${team1.id}_${team2.id}_${date}`;
+    const key = `${team1.id}_${team2.id}_${vnDate}`;
     const existing = existingMap[key];
 
     results.push({
       id: existing ? existing.id : idCounter++,
       team1,
       team2,
-      date,
-      time,
+      date: vnDate,
+      time: vnTime,
       group,
       round: roundNum,
       status,
@@ -585,14 +659,14 @@ function renderOddsResults() {
     // HTML kèo chấp
     const hcapLabel = odds.handicap === 0
       ? `<span class="full-name">Đồng banh</span><span class="short-code">Đồng</span>`
-      : `<span class="full-name">${favTeam.emoji} ${favTeam.name} chấp ${odds.handicap}</span>` +
+      : `<span class="full-name">${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} ${favTeam.name} chấp ${odds.handicap}</span>` +
       `<span class="short-code">${favTeam.code} chấp ${odds.handicap}</span>`;
     const hcapClass = hRes === "fav_win" ? "tag-win" : hRes === "dog_win" ? "tag-lose" : "tag-push";
 
     const hcapTextFull = hRes === "fav_win"
-      ? `✅ ${favTeam.emoji} Thắng kèo`
+      ? `✅ ${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} Thắng kèo`
       : hRes === "dog_win"
-        ? `❌ ${dogTeam.emoji} Bất ngờ thắng`
+        ? `❌ ${getFlagHtml(dogTeam.emoji, dogTeam.name, "normal")} Bất ngờ thắng`
         : `⚖️ Hòa kèo`;
     const hcapTextShort = hRes === "fav_win"
       ? `✅ Thắng`
@@ -622,9 +696,9 @@ function renderOddsResults() {
         <td>
           <div class="odds-match-meta">Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}</div>
           <div class="odds-match-name">
-            <span>${m.team1.emoji}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
+            <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
             <span style="color:var(--text-muted);margin:0 6px">vs</span>
-            <span>${m.team2.emoji}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
+            <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
           </div>
         </td>
         <td style="text-align:center">
