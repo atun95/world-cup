@@ -472,7 +472,7 @@ function parseApiMatches(apiMatches) {
           tzOffset = "Z"; // UTC +0
         }
       }
-      
+
       const matchTime = new Date(`${date}T${time}:00${tzOffset}`);
       const endTime = new Date(matchTime.getTime() + 115 * 60000);
       if (now >= matchTime && now <= endTime) {
