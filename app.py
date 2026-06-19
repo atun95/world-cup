@@ -67,7 +67,8 @@ def load_web_app():
     auto_height_script = """
     <script>
         function sendHeight() {
-            const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+            const wrapper = document.getElementById('app-wrapper');
+            const height = wrapper ? wrapper.offsetHeight : (document.documentElement.scrollHeight || document.body.scrollHeight);
             window.parent.postMessage({
                 type: 'streamlit:setComponentValue',
                 value: height
@@ -88,7 +89,12 @@ def load_web_app():
         });
         // Theo dõi sự thay đổi kích thước của trang
         const resizeObserver = new ResizeObserver(() => sendHeight());
-        resizeObserver.observe(document.body);
+        const wrapperEl = document.getElementById('app-wrapper');
+        if (wrapperEl) {
+            resizeObserver.observe(wrapperEl);
+        } else {
+            resizeObserver.observe(document.body);
+        }
     </script>
     """
     
