@@ -64,8 +64,29 @@ function initApp() {
   } else {
     state.matches = generateSchedule();
   }
-  saveMatches();
 
+  // Tải API Key và tỷ lệ kèo nhà cái đã lưu
+  let apiKey = localStorage.getItem("wc2026_odds_api_key");
+  if (!apiKey) {
+    // Tự động gán API Key mặc định dưới dạng mã hóa base64 để ẩn đi
+    apiKey = atob("ODU5ZDNlNjdiYmVlZGQ3MWE0YTI2OGZmNWFlNDE0YmU=");
+    localStorage.setItem("wc2026_odds_api_key", apiKey);
+  }
+  const keyInput = document.getElementById("odds-api-key");
+  if (keyInput && apiKey) {
+    keyInput.value = apiKey;
+  }
+  
+  const savedExtOdds = localStorage.getItem("wc2026_external_odds");
+  if (savedExtOdds) {
+    try {
+      state.externalOdds = JSON.parse(savedExtOdds);
+    } catch (e) {
+      state.externalOdds = null;
+    }
+  }
+
+  saveMatches();
   renderAll();
 
   // Tự động đồng bộ khi mở app (không hiện alert)
@@ -236,6 +257,30 @@ function buildMatchCard(m) {
   const dateStr = formatDate(m.date);
   const goalsNote = isCompleted ? `Tổng: <strong>${(m.score1 || 0) + (m.score2 || 0)} bàn</strong>` : `Lượt ${m.round} • Bảng ${m.group}`;
 
+  // Tỷ lệ kèo chấp & tài xỉu cho trận đấu
+  const odds = getMatchOdds(m);
+  
+  let oddsHtml = "";
+  if (!isCompleted) {
+    if (odds) {
+      const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
+      const handicapText = odds.handicap === 0 
+        ? "Đồng banh" 
+        : `${favTeam.name} chấp ${odds.handicap}`;
+      oddsHtml = `
+        <div class="match-odds-bar">
+          <span>⚖️ <strong>Chấp:</strong> ${handicapText}</span>
+          <span>🔥 <strong>Tài xỉu:</strong> ${odds.overUnder}</span>
+        </div>`;
+    } else {
+      oddsHtml = `
+        <div class="match-odds-bar">
+          <span>⚖️ <strong>Chấp:</strong> Đang cập nhật</span>
+          <span>🔥 <strong>Tài xỉu:</strong> Đang cập nhật</span>
+        </div>`;
+    }
+  }
+
   return `
     <div class="match-card ${isLive ? "is-live" : ""}">
       <div class="match-header">
@@ -256,6 +301,7 @@ function buildMatchCard(m) {
           <span class="team-rank">Elo ${m.team2.rating}</span>
         </div>
       </div>
+      ${oddsHtml}
       <div class="match-footer">${goalsNote}</div>
     </div>`;
 }
@@ -430,6 +476,20 @@ async function syncOfficialData(showAlert = false) {
     state.matches = parsed;
     state.lastSync = new Date().toISOString();
     state.syncSource = source.name;
+
+    // 2. Đồng bộ tỷ lệ kèo nếu có API Key
+    const apiKey = localStorage.getItem("wc2026_odds_api_key");
+    let oddsSynced = false;
+    let oddsErrorMsg = "";
+    if (apiKey) {
+      try {
+        await syncExternalOdds(apiKey);
+        oddsSynced = true;
+      } catch (err) {
+        oddsErrorMsg = "\n⚠️ Không thể tải kèo nhà cái (vui lòng kiểm tra lại API Key hoặc mạng).";
+      }
+    }
+
     saveMatches();
     renderAll();
 
@@ -438,18 +498,25 @@ async function syncOfficialData(showAlert = false) {
     const groupCompleted = parsed.filter(m => m.status === "completed" && VALID_GROUPS.includes(m.group)).length;
 
     if (showAlert) {
-      alert(
-        `✅ Cập nhật thành công từ nguồn chính thức!\n\n` +
+      let msg = `Cập nhật thành công từ nguồn chính thức!\n` +
         `📊 Bảng xếp hạng: tính từ ${groupCompleted} trận vòng bảng\n` +
         `⚽ Tổng: ${completed} trận có kết quả` +
         (live ? `\n🔴 ${live} trận đang diễn ra` : "") +
-        `\n\nNguồn: ${source.description}`
-      );
+        `\nNguồn: ${source.description}`;
+        
+      if (apiKey) {
+        if (oddsSynced) {
+          msg += "\n✅ Đã cập nhật tỷ lệ kèo thực tế từ nhà cái.";
+        } else {
+          msg += oddsErrorMsg;
+        }
+      }
+      showToast(msg, "success");
     }
 
   } catch (err) {
     console.error("Lỗi đồng bộ:", err);
-    if (showAlert) alert("❌ Lỗi đồng bộ: " + err.message + "\n\nDữ liệu hiện tại vẫn được hiển thị.");
+    if (showAlert) showToast("Lỗi đồng bộ: " + err.message, "error");
   } finally {
     setSyncingUI(false);
   }
@@ -584,12 +651,22 @@ function parseApiMatches(apiMatches) {
 // KỌ CƯỢC: TÍNH TOÁN KÈO CHẤP & TÀI XỈU
 // ──────────────────────────────────────────────
 function getMatchOdds(m) {
-  const diff = m.team1.rating - m.team2.rating;
-  const favoriteId = diff >= 0 ? m.team1.id : m.team2.id;
-  const handicap = getHandicapValue(Math.abs(diff));
-  const avgAtk = (m.team1.attack + m.team2.attack) / 2;
-  const overUnder = avgAtk > 82 ? 2.75 : avgAtk < 72 ? 2.25 : 2.5;
-  return { favoriteId, handicap, overUnder };
+  // Kiểm tra xem có tỷ lệ kèo ngoài nhà cái đã đồng bộ không
+  if (state.externalOdds) {
+    const key1 = `${m.team1.id}_${m.team2.id}`;
+    const key2 = `${m.team2.id}_${m.team1.id}`;
+    const ext = state.externalOdds[key1] || state.externalOdds[key2];
+    if (ext) {
+      return {
+        favoriteId: ext.favoriteId,
+        handicap: ext.handicap,
+        overUnder: ext.overUnder
+      };
+    }
+  }
+
+  // Không tính theo Elo nữa, trả về null nếu chưa có kèo nhà cái thực tế
+  return null;
 }
 
 function calcHandicapResult(m, odds) {
@@ -642,6 +719,24 @@ function renderOddsResults() {
 
   const rows = completed.map(m => {
     const odds = getMatchOdds(m);
+    if (!odds) {
+      return `
+        <tr>
+          <td>
+            <div class="odds-match-meta">Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}</div>
+            <div class="odds-match-name">
+              <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
+              <span style="color:var(--text-muted);margin:0 6px">vs</span>
+              <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
+            </div>
+          </td>
+          <td style="text-align:center">
+            <div class="odds-score">${m.score1} - ${m.score2}</div>
+          </td>
+          <td colspan="2" style="text-align:center;color:var(--text-muted);font-style:italic">Chưa cập nhật kèo nhà cái</td>
+        </tr>`;
+    }
+
     const hRes = calcHandicapResult(m, odds);
     const ouRes = calcOUResult(m, odds);
 
@@ -742,4 +837,143 @@ function renderOddsResults() {
       </div>
     `;
   }
+}
+
+// ──────────────────────────────────────────────
+// ĐỒNG BỘ TỶ LỆ KÈO THỰC TẾ (THE ODDS API)
+// ──────────────────────────────────────────────
+async function syncExternalOdds(apiKey) {
+  if (!apiKey) return;
+  try {
+    const url = `https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${apiKey}&regions=eu&markets=spreads,totals&oddsFormat=decimal`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Không thể kết nối máy chủ tỷ lệ kèo.");
+    
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    
+    const externalOdds = {};
+    data.forEach(match => {
+      const homeTeam = getTeamFromMap(match.home_team);
+      const awayTeam = getTeamFromMap(match.away_team);
+      if (!homeTeam || !awayTeam) return;
+      
+      let selectedBookmaker = match.bookmakers.find(b => 
+        b.markets.some(m => m.key === "spreads") && 
+        b.markets.some(m => m.key === "totals")
+      );
+      
+      if (!selectedBookmaker && match.bookmakers.length > 0) {
+        selectedBookmaker = match.bookmakers[0];
+      }
+      
+      if (!selectedBookmaker) return;
+      
+      const spreadsMarket = selectedBookmaker.markets.find(m => m.key === "spreads");
+      const totalsMarket = selectedBookmaker.markets.find(m => m.key === "totals");
+      
+      let favoriteId = homeTeam.id;
+      let handicap = 0;
+      let overUnder = 2.5;
+      
+      if (spreadsMarket && spreadsMarket.outcomes.length >= 2) {
+        const outcome1 = spreadsMarket.outcomes[0];
+        const outcome2 = spreadsMarket.outcomes[1];
+        
+        const favOutcome = outcome1.point < 0 ? outcome1 : (outcome2.point < 0 ? outcome2 : null);
+        if (favOutcome) {
+          const favTeam = getTeamFromMap(favOutcome.name);
+          if (favTeam) {
+            favoriteId = favTeam.id;
+            handicap = Math.abs(favOutcome.point);
+          }
+        }
+      }
+      
+      if (totalsMarket && totalsMarket.outcomes.length > 0) {
+        const point = totalsMarket.outcomes[0].point;
+        if (point !== undefined) {
+          overUnder = point;
+        }
+      }
+      
+      const matchKey = `${homeTeam.id}_${awayTeam.id}`;
+      externalOdds[matchKey] = { favoriteId, handicap, overUnder };
+    });
+    
+    state.externalOdds = externalOdds;
+    localStorage.setItem("wc2026_external_odds", JSON.stringify(externalOdds));
+  } catch (e) {
+    console.error("Lỗi đồng bộ tỷ lệ kèo nhà cái:", e);
+    throw e;
+  }
+}
+
+// ──────────────────────────────────────────────
+// ĐIỀU KHIỂN POPUP CẤU HÌNH KÈO
+// ──────────────────────────────────────────────
+function toggleSettingsModal() {
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  const isHidden = modal.style.display === "none";
+  modal.style.display = isHidden ? "flex" : "none";
+}
+
+function saveSettings() {
+  const keyInput = document.getElementById("odds-api-key");
+  if (!keyInput) return;
+  const key = keyInput.value.trim();
+  if (key) {
+    localStorage.setItem("wc2026_odds_api_key", key);
+    showToast("Đã lưu API Key thành công! Hãy nhấn 'Cập Nhật Tất Cả' để tải tỷ lệ kèo mới nhất.", "success");
+  } else {
+    localStorage.removeItem("wc2026_odds_api_key");
+    localStorage.removeItem("wc2026_external_odds");
+    state.externalOdds = null;
+    renderAll();
+    showToast("Đã xóa API Key. Bảng kèo sẽ dựa trên tỷ lệ thực tế đã lưu hoặc đang cập nhật.", "info");
+  }
+  toggleSettingsModal();
+}
+
+// ──────────────────────────────────────────────
+// HỆ THỐNG TOAST THÔNG BÁO TỰ PHÁT
+// ──────────────────────────────────────────────
+function showToast(message, type = "success") {
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    document.body.appendChild(container);
+  }
+  
+  const toast = document.createElement("div");
+  toast.className = `toast-item ${type}`;
+  
+  let icon = "✅";
+  if (type === "error") icon = "❌";
+  if (type === "warning") icon = "⚠️";
+  if (type === "info") icon = "ℹ️";
+  
+  const formattedMsg = message.replace(/\n/g, "<br>");
+  
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <div class="toast-message">${formattedMsg}</div>
+    <button class="toast-close">&times;</button>
+  `;
+  
+  toast.querySelector(".toast-close").addEventListener("click", () => {
+    toast.classList.add("fade-out");
+    setTimeout(() => toast.remove(), 300);
+  });
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.classList.add("fade-out");
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 4000);
 }
