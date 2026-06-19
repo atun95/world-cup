@@ -27,6 +27,9 @@ st.markdown("""
             overflow: hidden !important; 
         }
         #MainMenu, footer {visibility: hidden;}
+        header, [data-testid="stHeader"], .stAppHeader {
+            display: none !important;
+        }
     </style>
     <svg onload="
         window.addEventListener('message', function(e) {
