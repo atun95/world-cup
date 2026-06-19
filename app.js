@@ -92,11 +92,9 @@ function updateDashboard() {
   document.getElementById("w-live").textContent = live.length;
   document.getElementById("w-upcoming").textContent = upcoming.length;
 
-  // Badge live trên header
+  // Badge live trên header (đã tắt theo yêu cầu)
   const badge = document.getElementById("live-count-badge");
-  if (live.length > 0) {
-    badge.innerHTML = `<div class="live-count-inner"><div class="live-dot"></div>${live.length} trận đang diễn ra</div>`;
-  } else {
+  if (badge) {
     badge.innerHTML = "";
   }
 }
