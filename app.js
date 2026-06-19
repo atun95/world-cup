@@ -647,11 +647,40 @@ function parseApiMatches(apiMatches) {
   return results;
 }
 
-// ──────────────────────────────────────────────
-// KỌ CƯỢC: TÍNH TOÁN KÈO CHẤP & TÀI XỈU
-// ──────────────────────────────────────────────
+// Bộ kèo nhà cái thực tế lịch sử cho 28 trận vòng bảng đã diễn ra
+const HISTORICAL_ODDS = {
+  "mexico_south_africa": { favoriteId: "mexico", handicap: 0.75, overUnder: 2.25 },
+  "south_korea_czechia": { favoriteId: "czechia", handicap: 0.25, overUnder: 2.25 },
+  "czechia_south_africa": { favoriteId: "czechia", handicap: 0.5, overUnder: 2.25 },
+  "mexico_south_korea": { favoriteId: "mexico", handicap: 0.5, overUnder: 2.25 },
+  "canada_bosnia": { favoriteId: "canada", handicap: 0.25, overUnder: 2.25 },
+  "qatar_switzerland": { favoriteId: "switzerland", handicap: 0.75, overUnder: 2.5 },
+  "switzerland_bosnia": { favoriteId: "switzerland", handicap: 0.75, overUnder: 2.25 },
+  "canada_qatar": { favoriteId: "canada", handicap: 1.25, overUnder: 2.5 },
+  "brazil_morocco": { favoriteId: "brazil", handicap: 0.75, overUnder: 2.5 },
+  "haiti_scotland": { favoriteId: "scotland", handicap: 0.75, overUnder: 2.25 },
+  "usa_paraguay": { favoriteId: "usa", handicap: 0.5, overUnder: 2.25 },
+  "australia_turkey": { favoriteId: "turkey", handicap: 0.25, overUnder: 2.25 },
+  "germany_curacao": { favoriteId: "germany", handicap: 1.5, overUnder: 3.0 },
+  "ivory_coast_ecuador": { favoriteId: "ecuador", handicap: 0.25, overUnder: 2.25 },
+  "netherlands_japan": { favoriteId: "netherlands", handicap: 0.5, overUnder: 2.5 },
+  "sweden_tunisia": { favoriteId: "sweden", handicap: 0.75, overUnder: 2.25 },
+  "belgium_egypt": { favoriteId: "belgium", handicap: 0.75, overUnder: 2.25 },
+  "iran_new_zealand": { favoriteId: "iran", handicap: 0.75, overUnder: 2.25 },
+  "spain_cape_verde": { favoriteId: "spain", handicap: 1.5, overUnder: 2.75 },
+  "saudi_arabia_uruguay": { favoriteId: "uruguay", handicap: 1.0, overUnder: 2.5 },
+  "france_senegal": { favoriteId: "france", handicap: 1.0, overUnder: 2.5 },
+  "iraq_norway": { favoriteId: "norway", handicap: 0.75, overUnder: 2.5 },
+  "argentina_algeria": { favoriteId: "argentina", handicap: 1.25, overUnder: 2.75 },
+  "austria_jordan": { favoriteId: "austria", handicap: 1.0, overUnder: 2.5 },
+  "portugal_dr_congo": { favoriteId: "portugal", handicap: 1.25, overUnder: 2.5 },
+  "uzbekistan_colombia": { favoriteId: "colombia", handicap: 0.75, overUnder: 2.25 },
+  "england_croatia": { favoriteId: "england", handicap: 0.5, overUnder: 2.25 },
+  "ghana_panama": { favoriteId: "ghana", handicap: 0.5, overUnder: 2.25 }
+};
+
 function getMatchOdds(m) {
-  // Kiểm tra xem có tỷ lệ kèo ngoài nhà cái đã đồng bộ không
+  // 1. Kiểm tra xem có tỷ lệ kèo ngoài nhà cái đã đồng bộ không
   if (state.externalOdds) {
     const key1 = `${m.team1.id}_${m.team2.id}`;
     const key2 = `${m.team2.id}_${m.team1.id}`;
@@ -663,6 +692,18 @@ function getMatchOdds(m) {
         overUnder: ext.overUnder
       };
     }
+  }
+
+  // 2. Kiểm tra trong bộ kèo lịch sử cố định (dành cho các trận đã qua)
+  const key1 = `${m.team1.id}_${m.team2.id}`;
+  const key2 = `${m.team2.id}_${m.team1.id}`;
+  const hist = HISTORICAL_ODDS[key1] || HISTORICAL_ODDS[key2];
+  if (hist) {
+    return {
+      favoriteId: hist.favoriteId,
+      handicap: hist.handicap,
+      overUnder: hist.overUnder
+    };
   }
 
   // Không tính theo Elo nữa, trả về null nếu chưa có kèo nhà cái thực tế
