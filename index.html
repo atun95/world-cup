@@ -93,6 +93,7 @@
         <button class="tab-btn active" onclick="switchTab('matches-tab', this)">⚽ Lịch &amp; Kết Quả</button>
         <button class="tab-btn" onclick="switchTab('standings-tab', this)">📊 Bảng Xếp Hạng</button>
         <button class="tab-btn" onclick="switchTab('odds-tab', this)">📈 Kết Quả Kèo</button>
+        <button class="tab-btn" onclick="switchTab('ai-tab', this)">🤖 Dự Đoán AI</button>
         <button class="tab-btn" onclick="switchTab('knockout-tab', this)">🏆 Vòng KO</button>
       </div>
 
@@ -198,6 +199,79 @@
         <div id="knockout-grid"></div>
       </div>
 
+      <!-- Tab 4: AI Predictor -->
+      <div id="ai-tab" class="tab-content">
+        <!-- AI Dashboard Header -->
+        <div class="ai-dashboard-header">
+          <div class="ai-header-left">
+            <div class="ai-robot-badge">🤖 AI PREDICTOR</div>
+            <h2>Phân Tích Kèo World Cup 2026</h2>
+          </div>
+          <div class="ai-header-right">
+            <div class="ai-stat-card">
+              <span class="ai-stat-label">Độ Chính Xác Dự Đoán</span>
+              <span class="ai-stat-value" id="ai-accuracy-rate">--%</span>
+              <span class="ai-stat-sub" id="ai-accuracy-sub">Tính trên các trận đã đấu</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Trận đấu:</label>
+            <select id="ai-filter-status" onchange="renderAiPredictions()">
+              <option value="upcoming" selected>🕐 Sắp diễn ra</option>
+              <option value="completed">✅ Đã kết thúc (Lịch sử dự đoán)</option>
+              <option value="all">Tất cả</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Bảng đấu:</label>
+            <select id="ai-filter-group" onchange="renderAiPredictions()">
+              <option value="all">Tất cả (A-L)</option>
+              <option value="A">Bảng A</option>
+              <option value="B">Bảng B</option>
+              <option value="C">Bảng C</option>
+              <option value="D">Bảng D</option>
+              <option value="E">Bảng E</option>
+              <option value="F">Bảng F</option>
+              <option value="G">Bảng G</option>
+              <option value="H">Bảng H</option>
+              <option value="I">Bảng I</option>
+              <option value="J">Bảng J</option>
+              <option value="K">Bảng K</option>
+              <option value="L">Bảng L</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <input type="text" id="ai-search-team" class="search-input" placeholder="🔍 Tìm đội bóng..."
+              oninput="renderAiPredictions()">
+          </div>
+        </div>
+
+        <div class="ai-prediction-grid" id="ai-prediction-grid">
+          <!-- Dynamically populated with AI match cards -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AI Prediction Modal -->
+  <div id="ai-modal" class="modal-overlay" style="display:none">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>🤖 Trợ Lý AI: Phân Tích Chuyên Sâu</h3>
+        <button class="close-btn" onclick="toggleAiModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="ai-modal-body">
+        <!-- Rendered dynamically by javascript -->
+      </div>
+      <div class="modal-footer" style="margin-top:16px; display:flex; justify-content:flex-end;">
+        <button onclick="toggleAiModal()"
+          style="padding:10px 24px; border-radius:6px; border:none; background:var(--primary-color); color:#000; font-weight:600; cursor:pointer; font-size:13px;">Đóng
+          phân tích</button>
+      </div>
     </div>
   </div>
 
@@ -210,16 +284,23 @@
       </div>
       <div class="modal-body">
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height: 1.4;">
-          Để lấy tỷ lệ kèo thực tế từ nhà cái, vui lòng đăng ký một API Key miễn phí tại <a href="https://the-odds-api.com/" target="_blank" style="color:var(--primary-color); text-decoration: underline;">the-odds-api.com</a> và nhập vào bên dưới.
+          Để lấy tỷ lệ kèo thực tế từ nhà cái, vui lòng đăng ký một API Key miễn phí tại <a
+            href="https://the-odds-api.com/" target="_blank"
+            style="color:var(--primary-color); text-decoration: underline;">the-odds-api.com</a> và nhập vào bên dưới.
         </p>
         <div class="form-group">
-          <label for="odds-api-key" style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">The Odds API Key:</label>
-          <input type="password" id="odds-api-key" placeholder="Nhập API Key của bạn..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #3f3f46; background:#18181b; color:#fff; font-family:monospace; box-sizing: border-box;" />
+          <label for="odds-api-key" style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">The Odds
+            API Key:</label>
+          <input type="password" id="odds-api-key" placeholder="Nhập API Key của bạn..."
+            style="width:100%; padding:10px; border-radius:6px; border:1px solid #3f3f46; background:#18181b; color:#fff; font-family:monospace; box-sizing: border-box;" />
         </div>
       </div>
       <div class="modal-footer" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end;">
-        <button onclick="toggleSettingsModal()" style="padding:8px 16px; border-radius:6px; border:1px solid #3f3f46; background:transparent; color:#fff; cursor:pointer; font-size:13px;">Hủy</button>
-        <button onclick="saveSettings()" style="padding:8px 16px; border-radius:6px; border:none; background:var(--primary-color); color:#000; font-weight:600; cursor:pointer; font-size:13px;">Lưu lại</button>
+        <button onclick="toggleSettingsModal()"
+          style="padding:8px 16px; border-radius:6px; border:1px solid #3f3f46; background:transparent; color:#fff; cursor:pointer; font-size:13px;">Hủy</button>
+        <button onclick="saveSettings()"
+          style="padding:8px 16px; border-radius:6px; border:none; background:var(--primary-color); color:#000; font-weight:600; cursor:pointer; font-size:13px;">Lưu
+          lại</button>
       </div>
     </div>
   </div>
