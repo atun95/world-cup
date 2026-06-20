@@ -921,6 +921,43 @@ function renderOddsResults() {
 
   // Summary bar
   if (summaryBar) {
+    // Tính toán chênh lệch cao nhất trong lịch sử giải đấu (theo trình tự thời gian tăng dần)
+    const chronoMatches = [...completed].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+    let runningFav = 0;
+    let runningDog = 0;
+    let runningOver = 0;
+    let runningUnder = 0;
+    let maxHandicapDiff = 0;
+    let maxOuDiff = 0;
+
+    chronoMatches.forEach(m => {
+      const odds = getMatchOdds(m);
+      if (odds) {
+        const hRes = calcHandicapResult(m, odds);
+        const ouRes = calcOUResult(m, odds);
+
+        if (hRes === "fav_win") runningFav++;
+        else if (hRes === "dog_win") runningDog++;
+
+        if (ouRes?.result === "over") runningOver++;
+        else if (ouRes?.result === "under") runningUnder++;
+
+        const currentHDiff = Math.abs(runningFav - runningDog);
+        if (currentHDiff > maxHandicapDiff) maxHandicapDiff = currentHDiff;
+
+        const currentOuDiff = Math.abs(runningOver - runningUnder);
+        if (currentOuDiff > maxOuDiff) maxOuDiff = currentOuDiff;
+      }
+    });
+
+    const currentHDiff = Math.abs(favWins - dogWins);
+    const hLeader = favWins > dogWins ? "Kèo trên" : (dogWins > favWins ? "Kèo dưới" : "Cân bằng");
+    const hLeaderText = hLeader === "Cân bằng" ? "Cân bằng" : `${hLeader} +${currentHDiff}`;
+
+    const currentOuDiff = Math.abs(overs - unders);
+    const ouLeader = overs > unders ? "Tài" : (unders > overs ? "Xỉu" : "Cân bằng");
+    const ouLeaderText = ouLeader === "Cân bằng" ? "Cân bằng" : `${ouLeader} +${currentOuDiff}`;
+
     summaryBar.innerHTML = `
       <div class="odds-stat-card">
         <div class="odds-stat-val text-cyan">${completed.length}</div>
@@ -941,6 +978,16 @@ function renderOddsResults() {
       <div class="odds-stat-card">
         <div class="odds-stat-val text-pink">${unders}</div>
         <div class="odds-stat-label">Xỉu</div>
+      </div>
+      <div class="odds-stat-card odds-diff-card">
+        <div class="odds-stat-val text-yellow">${maxHandicapDiff}</div>
+        <div class="odds-stat-label">Chênh lệch Kèo lớn nhất</div>
+        <div class="odds-stat-sub">Hiện tại: ${hLeaderText}</div>
+      </div>
+      <div class="odds-stat-card odds-diff-card">
+        <div class="odds-stat-val text-yellow">${maxOuDiff}</div>
+        <div class="odds-stat-label">Chênh lệch Tài/Xỉu lớn nhất</div>
+        <div class="odds-stat-sub">Hiện tại: ${ouLeaderText}</div>
       </div>
     `;
   }

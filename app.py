@@ -55,16 +55,17 @@ def load_web_app():
         style_tag = f"<style>{css_content}</style>"
         html_content = html_content.replace('<link rel="stylesheet" href="styles.css">', style_tag)
 
+    import re
     js_bundle = ""
     if os.path.exists("data.js"):
         with open("data.js", "r", encoding="utf-8") as f:
             js_bundle += f"\n{f.read()}\n"
-        html_content = html_content.replace('<script src="data.js"></script>', '')
+        html_content = re.sub(r'<script\s+src="data\.js(?:\?v=[^"]*)?"></script>', '', html_content)
 
     if os.path.exists("app.js"):
         with open("app.js", "r", encoding="utf-8") as f:
             js_bundle += f"\n{f.read()}\n"
-        html_content = html_content.replace('<script src="app.js"></script>', '')
+        html_content = re.sub(r'<script\s+src="app\.js(?:\?v=[^"]*)?"></script>', '', html_content)
 
     # SỬA LỖI LAG: Thêm đoạn Script tự động cập nhật chiều cao thực tế lên trang mẹ Streamlit
     auto_height_script = """
