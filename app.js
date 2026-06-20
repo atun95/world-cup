@@ -883,21 +883,27 @@ function renderOddsResults() {
     const ouText = `<span class="full-name">${ouTextFull}</span><span class="short-code">${ouTextShort}</span>`;
 
     const isGroupMatch = VALID_GROUPS.includes(m.group);
-    const metaText = isGroupMatch
-      ? `Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}`
-      : `${m.group} • ${formatDate(m.date)}`;
+    const dateFormatted = formatDate(m.date);
+    const dateShort = dateFormatted.substring(0, 5); // Omit year (e.g. "20/06")
+    
+    const metaTextFull = isGroupMatch
+      ? `Bảng ${m.group} • L${m.round} • ${dateFormatted}`
+      : `${m.group} • ${dateFormatted}`;
+      
+    const metaTextShort = isGroupMatch
+      ? `Bảng ${m.group} • L${m.round} • ${dateShort}`
+      : `${m.group} • ${dateShort}`;
+      
+    const metaText = `<span class="full-name">${metaTextFull}</span><span class="short-code">${metaTextShort}</span>`;
 
     return `
       <tr>
         <td>
           <div class="odds-match-meta">${metaText}</div>
-          <div class="odds-match-name">
-            <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
-            <span style="color:var(--text-muted);margin:0 6px">vs</span>
-            <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
-          </div>
+          <div class="odds-match-name"><span class="odds-flag-span">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span><span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span><span class="odds-vs-span">vs</span><span class="odds-flag-span">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span><span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span></div>
         </td>
         <td style="text-align:center">
+          <div class="odds-meta-placeholder"></div>
           <div class="odds-score">${m.score1} - ${m.score2}</div>
         </td>
         <td>

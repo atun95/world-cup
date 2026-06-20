@@ -730,6 +730,11 @@ header {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   border-bottom: 1px solid var(--border-glass);
+  text-align: center;
+}
+
+.standing-table th:nth-child(2) {
+  text-align: left;
 }
 
 .standing-table td {
@@ -923,12 +928,13 @@ header {
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border-glass);
   white-space: nowrap;
+  text-align: left;
 }
 
 .odds-table td {
   padding: 13px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .odds-table tr:last-child td {
@@ -944,6 +950,20 @@ header {
   color: var(--text-muted);
   margin-bottom: 3px;
   letter-spacing: 0.3px;
+}
+
+.odds-meta-placeholder {
+  height: 18px;
+}
+
+.odds-vs-span {
+  color: var(--text-muted);
+  margin: 0 6px;
+}
+
+.odds-flag-span {
+  display: inline-flex;
+  align-items: center;
 }
 
 .odds-match-name {
@@ -1157,6 +1177,7 @@ header {
   .odds-table td {
     padding: 8px 6px;
     white-space: nowrap;
+    vertical-align: top;
   }
 
   .odds-score {
@@ -1173,6 +1194,14 @@ header {
 
   .odds-tag {
     padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .odds-meta-placeholder {
+    height: 14px;
+  }
+
+  .odds-line-label {
     font-size: 10px;
   }
 
