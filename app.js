@@ -86,6 +86,17 @@ function initApp() {
     }
   }
 
+  const savedManualOdds = localStorage.getItem("wc2026_manual_odds");
+  if (savedManualOdds) {
+    try {
+      state.manualOdds = JSON.parse(savedManualOdds);
+    } catch (e) {
+      state.manualOdds = {};
+    }
+  } else {
+    state.manualOdds = {};
+  }
+
   saveMatches();
   renderAll();
 
@@ -270,24 +281,22 @@ function buildMatchCard(m) {
   const odds = getMatchOdds(m);
 
   let oddsHtml = "";
-  if (!isCompleted) {
-    if (odds) {
-      const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
-      const handicapText = odds.handicap === 0
-        ? "Đồng banh"
-        : `${favTeam.name} chấp ${odds.handicap}`;
-      oddsHtml = `
-        <div class="match-odds-bar">
-          <span>⚖️ <strong>Chấp:</strong> ${handicapText}</span>
-          <span>🔥 <strong>Tài xỉu:</strong> ${odds.overUnder}</span>
-        </div>`;
-    } else {
-      oddsHtml = `
-        <div class="match-odds-bar">
-          <span>⚖️ <strong>Chấp:</strong> Đang cập nhật</span>
-          <span>🔥 <strong>Tài xỉu:</strong> Đang cập nhật</span>
-        </div>`;
-    }
+  if (odds) {
+    const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
+    const handicapText = odds.handicap === 0
+      ? "Đồng banh"
+      : `${favTeam.name} chấp ${odds.handicap}`;
+    oddsHtml = `
+      <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
+        <span style="font-size:11px;">⚖️ <strong>Chấp:</strong> ${handicapText} &nbsp; 🔥 <strong>T/X:</strong> ${odds.overUnder}</span>
+        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>
+      </div>`;
+  } else {
+    oddsHtml = `
+      <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
+        <span style="font-size:11px; color:var(--text-muted);">⚖️ Chưa cập nhật kèo</span>
+        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>
+      </div>`;
   }
 
   return `
@@ -691,6 +700,7 @@ const HISTORICAL_ODDS = {
   "usa_paraguay": { favoriteId: "usa", handicap: 0.5, overUnder: 2.25 },
   "australia_turkey": { favoriteId: "turkey", handicap: 0.25, overUnder: 2.25 },
   "germany_curacao": { favoriteId: "germany", handicap: 1.5, overUnder: 3.0 },
+  "germany_ivory_coast": { favoriteId: "germany", handicap: 1.0, overUnder: 3.0 },
   "ivory_coast_ecuador": { favoriteId: "ecuador", handicap: 0.25, overUnder: 2.25 },
   "netherlands_japan": { favoriteId: "netherlands", handicap: 0.5, overUnder: 2.5 },
   "sweden_tunisia": { favoriteId: "sweden", handicap: 0.75, overUnder: 2.25 },
@@ -709,7 +719,18 @@ const HISTORICAL_ODDS = {
 };
 
 function getMatchOdds(m) {
-  // 1. Kiểm tra xem có tỷ lệ kèo ngoài nhà cái đã đồng bộ không
+  // 1. Ưu tiên hàng đầu: Kèo do người dùng nhập bằng tay
+  if (state.manualOdds && state.manualOdds[m.id]) {
+    return {
+      favoriteId: state.manualOdds[m.id].favoriteId,
+      handicap: state.manualOdds[m.id].handicap,
+      overUnder: state.manualOdds[m.id].overUnder,
+      isReal: true,
+      isManual: true
+    };
+  }
+
+  // 2. Kiểm tra xem có tỷ lệ kèo ngoài nhà cái đã đồng bộ không
   if (state.externalOdds) {
     const key1 = `${m.team1.id}_${m.team2.id}`;
     const key2 = `${m.team2.id}_${m.team1.id}`;
@@ -724,7 +745,7 @@ function getMatchOdds(m) {
     }
   }
 
-  // 2. Kiểm tra trong bộ kèo lịch sử cố định (dành cho các trận đã qua)
+  // 3. Kiểm tra trong bộ kèo lịch sử cố định (dành cho các trận đã qua)
   const key1 = `${m.team1.id}_${m.team2.id}`;
   const key2 = `${m.team2.id}_${m.team1.id}`;
   const hist = HISTORICAL_ODDS[key1] || HISTORICAL_ODDS[key2];
@@ -900,7 +921,16 @@ function renderOddsResults() {
       <tr>
         <td>
           <div class="odds-match-meta">${metaText}</div>
-          <div class="odds-match-name"><span class="odds-flag-span">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span><span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span><span class="odds-vs-span">vs</span><span class="odds-flag-span">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span><span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span></div>
+          <div class="odds-match-name" style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+            <span class="odds-flag-span">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span>
+            <span class="full-name">${m.team1.name}</span>
+            <span class="short-code">${m.team1.code}</span>
+            <span class="odds-vs-span">vs</span>
+            <span class="odds-flag-span">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span>
+            <span class="full-name">${m.team2.name}</span>
+            <span class="short-code">${m.team2.code}</span>
+            <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:1px 4px; border-radius:3px; font-size:9.5px; cursor:pointer; margin-left:6px;" title="Nhập/Sửa kèo">✏️</button>
+          </div>
         </td>
         <td style="text-align:center">
           <div class="odds-meta-placeholder"></div>
@@ -1658,4 +1688,116 @@ function toggleAiModal(show) {
   const modal = document.getElementById("ai-modal");
   if (!modal) return;
   modal.style.display = show ? "flex" : "none";
+}
+
+// ──────────────────────────────────────────────
+// CHỨC NĂNG NHẬP KÈO THỦ CÔNG
+// ──────────────────────────────────────────────
+function editManualOdds(matchId) {
+  const m = state.matches.find(match => match.id === matchId);
+  if (!m) return;
+
+  // Lấy kèo hiện tại (nếu có)
+  const currentOdds = getMatchOdds(m) || { favoriteId: m.team1.id, handicap: 0.5, overUnder: 2.5 };
+
+  // Tạo modal nếu chưa có
+  let modal = document.getElementById("manual-odds-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "manual-odds-modal";
+    modal.className = "modal-overlay";
+    modal.style.display = "none";
+    document.body.appendChild(modal);
+  }
+
+  // Nội dung modal
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 350px;">
+      <div class="modal-header">
+        <h3>✏️ Nhập/Sửa Kèo Thủ Công</h3>
+        <button class="close-btn" onclick="closeManualOddsModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
+        <p style="margin:0 0 8px 0; color:var(--text-muted); text-align:center; font-weight:600;">
+          ${m.team1.name} vs ${m.team2.name}
+        </p>
+        
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <label style="font-weight:600; color:var(--accent-cyan);">👑 Đội cửa trên (Chấp):</label>
+          <select id="mo-fav-id" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:6px; border-radius:6px; outline:none;">
+            <option value="${m.team1.id}" ${currentOdds.favoriteId === m.team1.id ? "selected" : ""}>${m.team1.name}</option>
+            <option value="${m.team2.id}" ${currentOdds.favoriteId === m.team2.id ? "selected" : ""}>${m.team2.name}</option>
+          </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <label style="font-weight:600; color:var(--accent-cyan);">⚖️ Tỷ lệ chấp:</label>
+          <select id="mo-handicap" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:6px; border-radius:6px; outline:none;">
+            <option value="0" ${currentOdds.handicap === 0 ? "selected" : ""}>Đồng banh (0)</option>
+            <option value="0.25" ${currentOdds.handicap === 0.25 ? "selected" : ""}>0.25 (1/4)</option>
+            <option value="0.5" ${currentOdds.handicap === 0.5 ? "selected" : ""}>0.5 (1/2)</option>
+            <option value="0.75" ${currentOdds.handicap === 0.75 ? "selected" : ""}>0.75 (3/4)</option>
+            <option value="1" ${currentOdds.handicap === 1.0 ? "selected" : ""}>1.0 (Chấp 1)</option>
+            <option value="1.25" ${currentOdds.handicap === 1.25 ? "selected" : ""}>1.25 (1 1/4)</option>
+            <option value="1.5" ${currentOdds.handicap === 1.5 ? "selected" : ""}>1.5 (1 1/2)</option>
+            <option value="1.75" ${currentOdds.handicap === 1.75 ? "selected" : ""}>1.75 (1 3/4)</option>
+            <option value="2" ${currentOdds.handicap === 2.0 ? "selected" : ""}>2.0 (Chấp 2)</option>
+            <option value="2.25" ${currentOdds.handicap === 2.25 ? "selected" : ""}>2.25 (2 1/4)</option>
+            <option value="2.5" ${currentOdds.handicap === 2.5 ? "selected" : ""}>2.5 (2 1/2)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <label style="font-weight:600; color:var(--accent-cyan);">🔥 Tỷ lệ Tài/Xỉu:</label>
+          <select id="mo-ou" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:6px; border-radius:6px; outline:none;">
+            <option value="1.5" ${currentOdds.overUnder === 1.5 ? "selected" : ""}>1.5</option>
+            <option value="1.75" ${currentOdds.overUnder === 1.75 ? "selected" : ""}>1.75</option>
+            <option value="2" ${currentOdds.overUnder === 2.0 ? "selected" : ""}>2.0</option>
+            <option value="2.25" ${currentOdds.overUnder === 2.25 ? "selected" : ""}>2.25</option>
+            <option value="2.5" ${currentOdds.overUnder === 2.5 ? "selected" : ""}>2.5</option>
+            <option value="2.75" ${currentOdds.overUnder === 2.75 ? "selected" : ""}>2.75</option>
+            <option value="3" ${currentOdds.overUnder === 3.0 ? "selected" : ""}>3.0</option>
+            <option value="3.25" ${currentOdds.overUnder === 3.25 ? "selected" : ""}>3.25</option>
+            <option value="3.5" ${currentOdds.overUnder === 3.5 ? "selected" : ""}>3.5</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button onclick="saveManualOdds(${matchId})" style="flex:1; background:var(--primary-color); border:none; color:#000; padding:8px; border-radius:6px; font-weight:700; cursor:pointer;">Lưu lại</button>
+          <button onclick="clearManualOdds(${matchId})" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#f87171; padding:8px; border-radius:6px; font-weight:600; cursor:pointer;">Xóa kèo</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+}
+
+function closeManualOddsModal() {
+  const modal = document.getElementById("manual-odds-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function saveManualOdds(matchId) {
+  const favoriteId = document.getElementById("mo-fav-id").value;
+  const handicap = parseFloat(document.getElementById("mo-handicap").value);
+  const overUnder = parseFloat(document.getElementById("mo-ou").value);
+
+  if (!state.manualOdds) state.manualOdds = {};
+  state.manualOdds[matchId] = { favoriteId, handicap, overUnder };
+
+  localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+  closeManualOddsModal();
+  renderAll();
+  showToast("Đã cập nhật kèo thủ công thành công!", "success");
+}
+
+function clearManualOdds(matchId) {
+  if (state.manualOdds && state.manualOdds[matchId]) {
+    delete state.manualOdds[matchId];
+    localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+  }
+  closeManualOddsModal();
+  renderAll();
+  showToast("Đã xóa kèo thủ công, chuyển sang dùng tỷ lệ mặc định.", "info");
 }
