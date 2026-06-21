@@ -301,13 +301,13 @@ function buildMatchCard(m) {
         <div class="team-side">
           <span class="team-flag">${getFlagHtml(m.team1.emoji, m.team1.name, "large")}</span>
           <span class="team-name">${m.team1.name}</span>
-          <span class="team-rank">Elo ${m.team1.rating}</span>
+          <span class="team-rank">Sức mạnh ${m.team1.rating}</span>
         </div>
         <div class="score-center">${scoreHtml}</div>
         <div class="team-side">
           <span class="team-flag">${getFlagHtml(m.team2.emoji, m.team2.name, "large")}</span>
           <span class="team-name">${m.team2.name}</span>
-          <span class="team-rank">Elo ${m.team2.rating}</span>
+          <span class="team-rank">Sức mạnh ${m.team2.rating}</span>
         </div>
       </div>
       ${oddsHtml}
@@ -737,10 +737,10 @@ function getMatchOdds(m) {
     };
   }
 
-  // 3. Tự động tính toán ước lượng theo Elo làm kèo mặc định nếu chưa có tỷ lệ từ nhà cái
-  const eloDiff = m.team1.rating - m.team2.rating;
-  const favoriteId = eloDiff >= 0 ? m.team1.id : m.team2.id;
-  const diffAbs = Math.abs(eloDiff);
+  // 3. Tự động tính toán ước lượng theo chỉ số sức mạnh nếu chưa có tỷ lệ từ nhà cái
+  const powerDiff = m.team1.rating - m.team2.rating;
+  const favoriteId = powerDiff >= 0 ? m.team1.id : m.team2.id;
+  const diffAbs = Math.abs(powerDiff);
   
   let handicap = 0.5;
   if (diffAbs < 30) handicap = 0;
@@ -842,10 +842,10 @@ function renderOddsResults() {
     else if (ouRes?.result === "under") unders++;
     else pushOU++;
 
-    // Hiển thị nguồn kèo
+    // Hiển thị nguồn kèo (chỉ hiển thị nhãn AI khi là kèo tự động ước lượng)
     const oddsSourceTag = odds.isReal
-      ? `<span class="odds-source-badge real" title="Kèo nhà cái thực tế">Real</span>`
-      : `<span class="odds-source-badge elo" title="Kèo ước lượng ELO của AI">AI</span>`;
+      ? ""
+      : `<span class="odds-source-badge elo" title="Kèo ước lượng của AI">AI</span>`;
 
     // HTML kèo chấp
     const hcapLabel = odds.handicap === 0
@@ -1196,7 +1196,7 @@ function predictMatch(m, odds) {
 
   const eloDiff = t1.rating - t2.rating;
 
-  // Tính chỉ số số bàn thắng kỳ vọng (xG) cơ bản theo Elo và công thức Poisson
+  // Tính chỉ số số bàn thắng kỳ vọng (xG) cơ bản theo điểm Sức mạnh và công thức Poisson
   const rawL1 = 1.15 * Math.pow(1.0022, eloDiff) * (t1.attack / 75) * (75 / t2.defense);
   const rawL2 = 1.15 * Math.pow(1.0022, -eloDiff) * (t2.attack / 75) * (75 / t1.defense);
 
@@ -1260,7 +1260,7 @@ function predictMatch(m, odds) {
   if (predScore1 > 4) predScore1 = 4;
   if (predScore2 > 4) predScore2 = 4;
 
-  // Lấy tỷ lệ kèo chấp & tài xỉu thực tế hoặc ước lượng ELO làm kèo mặc định
+  // Lấy tỷ lệ kèo chấp & tài xỉu thực tế hoặc ước lượng sức mạnh làm kèo mặc định
   let favoriteId = eloDiff >= 0 ? t1.id : t2.id;
   let handicap = 0.5;
   let overUnder = 2.5;
@@ -1355,18 +1355,18 @@ function predictMatch(m, odds) {
   const favTeam = t1.id === favoriteId ? t1 : t2;
   const undTeam = t1.id === favoriteId ? t2 : t1;
 
-  analysisText += `Trận đấu giữa **${t1.name}** và **${t2.name}** được phân tích chi tiết dựa trên dữ liệu ELO hiện tại (${t1.name}: ${t1.rating} vs ${t2.name}: ${t2.rating}).\n\n`;
+  analysisText += `Trận đấu giữa **${t1.name}** và **${t2.name}** được phân tích chi tiết dựa trên chỉ số sức mạnh hiện tại (${t1.name}: ${t1.rating} vs ${t2.name}: ${t2.rating}).\n\n`;
   analysisText += `📊 **Chỉ số tấn công/phòng ngự**: ${t1.name} sở hữu sức công ${t1.attack} - phòng ngự ${t1.defense}, trong khi ${t2.name} là công ${t2.attack} - phòng ngự ${t2.defense}. Kỳ vọng số bàn thắng (xG) tính toán theo mô hình Poisson là **${l1.toFixed(2)} bàn** cho ${t1.name} và **${l2.toFixed(2)} bàn** cho ${t2.name}.\n\n`;
 
   if (hasRealOdds) {
     analysisText += `⚖️ **Phân tích Kèo nhà cái**: Tỷ lệ nhà cái niêm yết hiện tại là **${favTeam.name} chấp ${handicap} trái**. So sánh chênh lệch bàn thắng kỳ vọng toán học (${Math.abs(expectedDiff).toFixed(2)} bàn) với mốc handicap thực tế, `;
     if (valueSide === (favTeam.id === t1.id ? "home" : "away")) {
-      analysisText += `mô hình AI nhận định mốc chấp ${handicap} vẫn tương đối có lợi cho cửa trên. Sức công phá ELO vượt trội của cửa trên hứa hẹn sẽ đè bẹp đối thủ và thắng kèo châu Á.`;
+      analysisText += `mô hình AI nhận định mốc chấp ${handicap} vẫn tương đối có lợi cho cửa trên. Sức công phá mạnh mẽ của cửa trên hứa hẹn sẽ đè bẹp đối thủ và thắng kèo châu Á.`;
     } else {
       analysisText += `mức chấp ${handicap} là khá nặng so với năng lực thi đấu thực tế. AI khuyến nghị đi cửa dưới **${undTeam.name} +${handicap}** để hưởng lợi thế từ handicap của nhà cái.`;
     }
   } else {
-    analysisText += `⚖️ **Phân tích dự báo**: Do trận đấu chưa có tỷ lệ kèo từ API nhà cái, AI dự đoán mức kèo chấp phù hợp theo ELO là **${favTeam.name} chấp ${handicap}**. Lựa chọn cửa trên có tỷ lệ thắng kèo cao hơn nhờ điểm ELO vượt trội.`;
+    analysisText += `⚖️ **Phân tích dự báo**: Do trận đấu chưa có tỷ lệ kèo từ API nhà cái, AI dự báo mức kèo chấp dựa theo chỉ số sức mạnh là **${favTeam.name} chấp ${handicap}**. Lựa chọn cửa trên được đánh giá cao hơn nhờ chỉ số sức mạnh vượt trội.`;
   }
 
   return {
@@ -1528,7 +1528,7 @@ function renderAiPredictions() {
           <div class="ai-team-col">
             <span class="ai-team-flag">${getFlagHtml(m.team1.emoji, m.team1.name, "large")}</span>
             <span class="ai-team-name">${m.team1.name}</span>
-            <span class="ai-team-elo">Elo ${m.team1.rating}</span>
+            <span class="ai-team-elo">Sức mạnh ${m.team1.rating}</span>
           </div>
           <div class="ai-vs-col">
             <span class="ai-pred-score">${pred.predScore1} - ${pred.predScore2}</span>
@@ -1538,7 +1538,7 @@ function renderAiPredictions() {
           <div class="ai-team-col">
             <span class="ai-team-flag">${getFlagHtml(m.team2.emoji, m.team2.name, "large")}</span>
             <span class="ai-team-name">${m.team2.name}</span>
-            <span class="ai-team-elo">Elo ${m.team2.rating}</span>
+            <span class="ai-team-elo">Sức mạnh ${m.team2.rating}</span>
           </div>
         </div>
         <div class="ai-tips-panel">
@@ -1585,7 +1585,7 @@ function showAiAnalysis(matchId) {
         <div class="ai-modal-card">
           <h4>📊 Chỉ số Sức mạnh &amp; Đối đầu</h4>
           <div class="ai-stat-row">
-            <span class="stat-name">ELO</span>
+            <span class="stat-name">Sức mạnh</span>
             <div class="stat-bar-container">
               <div class="stat-bar home" style="width: ${t1.rating / (t1.rating + t2.rating) * 100}%"></div>
             </div>
@@ -1618,7 +1618,7 @@ function showAiAnalysis(matchId) {
           <h4>⚖️ Chi tiết Kèo Nhà Cái</h4>
           <div class="ai-tip-row" style="margin-bottom:8px;">
             <span>Trạng thái kèo:</span>
-            <strong>${pred.hasRealOdds ? "Đồng bộ thực tế" : "Ước lượng theo ELO"}</strong>
+            <strong>${pred.hasRealOdds ? "Đồng bộ thực tế" : "Ước lượng AI"}</strong>
           </div>
           <div class="ai-tip-row" style="margin-bottom:8px;">
             <span>Kèo chấp châu Á:</span>
