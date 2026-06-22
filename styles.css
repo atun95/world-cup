@@ -1962,7 +1962,7 @@ header {
 /* ── TOURNAMENT BRACKET ── */
 .bracket-container {
   overflow-x: auto;
-  padding: 24px;
+  padding: 16px;
   background: var(--bg-secondary);
   border-radius: 16px;
   border: 1px solid var(--border-glass);
@@ -1988,16 +1988,16 @@ header {
 
 .bracket-scroll-wrapper {
   display: flex;
-  min-width: 1750px;
+  min-width: 1400px;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .bracket-column {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-width: 175px;
+  min-width: 140px;
 }
 
 .bracket-column-title {
@@ -2007,7 +2007,7 @@ header {
   color: var(--accent-cyan);
   background: rgba(0, 212, 255, 0.05);
   border: 1px solid rgba(0, 212, 255, 0.15);
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 20px;
   margin-bottom: 16px;
   letter-spacing: 0.5px;
@@ -2081,17 +2081,50 @@ header {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 130px;
+  max-width: 90px;
 }
 
 .bracket-team-score {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-main);
-  padding-left: 8px;
+  padding-left: 6px;
 }
 
 .bracket-node-team.winner .bracket-team-score {
   color: var(--accent-cyan);
+}
+
+/* Desktop override to fit the screen width */
+@media (min-width: 1200px) {
+  .bracket-scroll-wrapper {
+    min-width: 0;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .bracket-column {
+    min-width: 0;
+  }
+
+  .bracket-column-title {
+    font-size: 9px;
+    padding: 4px 6px;
+    margin-bottom: 12px;
+  }
+
+  .bracket-match-node {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .bracket-team-name {
+    max-width: 75px;
+  }
+
+  .bracket-team-score {
+    font-size: 11px;
+    padding-left: 4px;
+  }
 }
