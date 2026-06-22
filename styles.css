@@ -2127,4 +2127,51 @@ header {
     font-size: 11px;
     padding-left: 4px;
   }
+}
+
+/* ── COLLAPSIBLE ACCORDION FOR KO RULES ── */
+.ko-format-details {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.ko-format-details[open] {
+  border-color: rgba(0, 212, 255, 0.2);
+}
+
+.ko-format-summary {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s;
+  outline: none;
+}
+
+.ko-format-summary:hover {
+  background: rgba(0, 212, 255, 0.05);
+  color: var(--accent-cyan);
+}
+
+.ko-format-details .ko-format-card {
+  border: none;
+  background: transparent;
+  margin-top: 0;
+  padding: 16px;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.ko-format-details .ko-format-card::before {
+  display: none; /* Hide the sidebar gradient inside the details */
 }
