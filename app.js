@@ -414,52 +414,182 @@ function renderStandings() {
 // ──────────────────────────────────────────────
 // KNOCKOUT
 // ──────────────────────────────────────────────
+const BRACKET_TEMPLATE = [
+  // Round of 32 (16 matches)
+  [
+    { id: 1, label: "Trận 1", t1: "Nhì A", t2: "Nhì B" },
+    { id: 2, label: "Trận 2", t1: "Nhất C", t2: "Nhì F" },
+    { id: 3, label: "Trận 3", t1: "Nhất A", t2: "Ba C/D/E/F" },
+    { id: 4, label: "Trận 4", t1: "Nhất F", t2: "Nhì C" },
+    { id: 5, label: "Trận 5", t1: "Nhì E", t2: "Nhì I" },
+    { id: 6, label: "Trận 6", t1: "Nhất I", t2: "Ba C/D/F/G/H" },
+    { id: 7, label: "Trận 7", t1: "Nhất E", t2: "Ba C/E/F/H/I" },
+    { id: 8, label: "Trận 8", t1: "Nhất L", t2: "Ba E/H/I/J/K" },
+    { id: 9, label: "Trận 9", t1: "Nhất G", t2: "Ba A/E/H/I/J" },
+    { id: 10, label: "Trận 10", t1: "Nhất D", t2: "Ba B/E/F/I/J" },
+    { id: 11, label: "Trận 11", t1: "Nhất H", t2: "Nhì J" },
+    { id: 12, label: "Trận 12", t1: "Nhì K", t2: "Nhì L" },
+    { id: 13, label: "Trận 13", t1: "Nhất B", t2: "Ba E/F/G/I/J" },
+    { id: 14, label: "Trận 14", t1: "Nhì D", t2: "Nhì G" },
+    { id: 15, label: "Trận 15", t1: "Nhất J", t2: "Nhì H" },
+    { id: 16, label: "Trận 16", t1: "Nhất K", t2: "Ba D/E/I/J/L" }
+  ],
+  // Round of 16 (8 matches)
+  [
+    { id: 17, label: "Trận 17", t1: "Thắng Trận 1", t2: "Thắng Trận 2" },
+    { id: 18, label: "Trận 18", t1: "Thắng Trận 3", t2: "Thắng Trận 4" },
+    { id: 19, label: "Trận 19", t1: "Thắng Trận 5", t2: "Thắng Trận 6" },
+    { id: 20, label: "Trận 20", t1: "Thắng Trận 7", t2: "Thắng Trận 8" },
+    { id: 21, label: "Trận 21", t1: "Thắng Trận 9", t2: "Thắng Trận 10" },
+    { id: 22, label: "Trận 22", t1: "Thắng Trận 11", t2: "Thắng Trận 12" },
+    { id: 23, label: "Trận 23", t1: "Thắng Trận 13", t2: "Thắng Trận 14" },
+    { id: 24, label: "Trận 24", t1: "Thắng Trận 15", t2: "Thắng Trận 16" }
+  ],
+  // Quarter-finals (4 matches)
+  [
+    { id: 25, label: "Tứ Kết 1", t1: "Thắng Trận 17", t2: "Thắng Trận 18" },
+    { id: 26, label: "Tứ Kết 2", t1: "Thắng Trận 19", t2: "Thắng Trận 20" },
+    { id: 27, label: "Tứ Kết 3", t1: "Thắng Trận 21", t2: "Thắng Trận 22" },
+    { id: 28, label: "Tứ Kết 4", t1: "Thắng Trận 23", t2: "Thắng Trận 24" }
+  ],
+  // Semi-finals (2 matches)
+  [
+    { id: 29, label: "Bán Kết 1", t1: "Thắng Tứ Kết 1", t2: "Thắng Tứ Kết 2" },
+    { id: 30, label: "Bán Kết 2", t1: "Thắng Tứ Kết 3", t2: "Thắng Tứ Kết 4" }
+  ],
+  // Final & 3rd Place (2 matches)
+  [
+    { id: 31, label: "Chung Kết", t1: "Thắng Bán Kết 1", t2: "Thắng Bán Kết 2" },
+    { id: 32, label: "Tranh Hạng 3", t1: "Thua Bán Kết 1", t2: "Thua Bán Kết 2" }
+  ]
+];
+
+function getBracketRoundIndex(m) {
+  const name = (m.group || m.round || "").toLowerCase();
+  if (name.includes("32") || name.includes("round of 32")) return 0;
+  if (name.includes("16") || name.includes("round of 16") || name.includes("octofinal")) return 1;
+  if (name.includes("tứ kết") || name.includes("quarter") || name.includes("quarterfinal")) return 2;
+  if (name.includes("bán kết") || name.includes("semi") || name.includes("semifinal")) return 3;
+  if (name.includes("chung kết") || name.includes("final") || name.includes("third place") || name.includes("tranh hạng ba") || name.includes("hạng 3")) return 4;
+  return -1;
+}
+
+function buildBracketNodeHtml(templateNode, matchFromState) {
+  let t1Name = templateNode.t1;
+  let t2Name = templateNode.t2;
+  let t1Emoji = "";
+  let t2Emoji = "";
+  let score1 = "-";
+  let score2 = "-";
+  let isLive = false;
+  let isCompleted = false;
+  let matchTimeStr = "Chờ xác định";
+  let t1Winner = false;
+  let t2Winner = false;
+
+  if (matchFromState) {
+    t1Name = matchFromState.team1?.name || templateNode.t1;
+    t2Name = matchFromState.team2?.name || templateNode.t2;
+    t1Emoji = matchFromState.team1?.emoji || "";
+    t2Emoji = matchFromState.team2?.emoji || "";
+    
+    if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score1 = matchFromState.score1;
+    if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score2 = matchFromState.score2;
+    
+    isLive = matchFromState.status === "live";
+    isCompleted = matchFromState.status === "completed";
+    matchTimeStr = matchFromState.date ? `${formatDate(matchFromState.date)} ${matchFromState.time}` : "Chờ xác định";
+    
+    if (isCompleted) {
+      if (matchFromState.score1 > matchFromState.score2) t1Winner = true;
+      if (matchFromState.score2 > matchFromState.score1) t2Winner = true;
+    }
+  }
+
+  const flag1 = t1Emoji ? getFlagHtml(t1Emoji, t1Name, "small") : "";
+  const flag2 = t2Emoji ? getFlagHtml(t2Emoji, t2Name, "small") : "";
+
+  const liveBadge = isLive ? `<span style="color:var(--accent-pink); font-weight:800; animation: blink 1.5s infinite;">🔴 LIVE</span>` : "";
+
+  return `
+    <div class="bracket-match-node ${isLive ? 'is-live' : ''}">
+      <div class="bracket-node-header">
+        <span>${templateNode.label}</span>
+        <span>${liveBadge || matchTimeStr}</span>
+      </div>
+      <div class="bracket-node-team ${t1Winner ? 'winner' : ''}">
+        <span class="bracket-team-name-wrap">${flag1} <span class="bracket-team-name">${t1Name}</span></span>
+        <span class="bracket-team-score">${score1}</span>
+      </div>
+      <div class="bracket-node-team ${t2Winner ? 'winner' : ''}">
+        <span class="bracket-team-name-wrap">${flag2} <span class="bracket-team-name">${t2Name}</span></span>
+        <span class="bracket-team-score">${score2}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderKnockout() {
-  const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
   const grid = document.getElementById("knockout-grid");
   const placeholder = document.querySelector(".knockout-placeholder");
   if (!grid) return;
 
-  if (knockoutMatches.length === 0) {
-    grid.innerHTML = "";
-    if (placeholder) placeholder.style.display = "flex";
-    return;
-  }
-
   if (placeholder) placeholder.style.display = "none";
 
-  // Nhóm theo vòng đấu
-  const rounds = {};
+  const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
+
+  const stateRounds = [[], [], [], [], []];
   knockoutMatches.forEach(m => {
-    const key = m.group || m.round || "Vòng loại";
-    if (!rounds[key]) rounds[key] = [];
-    rounds[key].push(m);
+    const rIdx = getBracketRoundIndex(m);
+    if (rIdx >= 0 && rIdx < 5) {
+      stateRounds[rIdx].push(m);
+    }
   });
 
-  grid.innerHTML = Object.entries(rounds).map(([roundName, matches]) => `
-    <div class="knockout-round">
-      <div class="knockout-round-title">${roundName}</div>
-      <div class="knockout-matches-grid">
-        ${matches.map(m => {
-    const isCompleted = m.status === "completed";
-    const isLive = m.status === "live";
-    const scoreStr = (isCompleted || isLive) ? `${m.score1} - ${m.score2}` : "VS";
-    return `
-            <div class="ko-match-card">
-              <div class="ko-team">
-                <span style="display:inline-flex;align-items:center;height:22px">${getFlagHtml(m.team1.emoji, m.team1.name, "large")}</span>
-                <span class="ko-team-name">${m.team1.name}</span>
-              </div>
-              <div class="ko-score">${scoreStr}</div>
-              <div class="ko-team" style="flex-direction:row-reverse;text-align:right">
-                <span style="display:inline-flex;align-items:center;height:22px">${getFlagHtml(m.team2.emoji, m.team2.name, "large")}</span>
-                <span class="ko-team-name">${m.team2.name}</span>
-              </div>
-            </div>`;
-  }).join("")}
+  stateRounds.forEach(arr => {
+    arr.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+  });
+
+  // Chia đôi nhánh đấu (Trái và Phải) gặp nhau ở giữa (Chung kết)
+  const cols = [
+    { title: "VÒNG 32 ĐỘI (TRÁI)", template: BRACKET_TEMPLATE[0].slice(0, 8), matches: stateRounds[0].slice(0, 8) },
+    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(0, 4), matches: stateRounds[1].slice(0, 4) },
+    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(0, 2), matches: stateRounds[2].slice(0, 2) },
+    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(0, 1), matches: stateRounds[3].slice(0, 1) },
+    { title: "CHUNG KẾT & HẠNG 3", template: BRACKET_TEMPLATE[4], matches: stateRounds[4] },
+    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(1, 2), matches: stateRounds[3].slice(1, 2) },
+    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(2, 4), matches: stateRounds[2].slice(2, 4) },
+    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(4, 8), matches: stateRounds[1].slice(4, 8) },
+    { title: "VÒNG 32 ĐỘI (PHẢI)", template: BRACKET_TEMPLATE[0].slice(8, 16), matches: stateRounds[0].slice(8, 16) }
+  ];
+
+  let html = `
+    <div class="bracket-container">
+      <div class="bracket-scroll-wrapper">
+  `;
+
+  cols.forEach(col => {
+    const nodesHtml = col.template.map((node, nodeIdx) => {
+      const match = col.matches[nodeIdx] || null;
+      return buildBracketNodeHtml(node, match);
+    }).join("");
+
+    html += `
+      <div class="bracket-column">
+        <div class="bracket-column-title">${col.title}</div>
+        <div class="bracket-match-list">
+          ${nodesHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
       </div>
     </div>
-  `).join("");
+  `;
+
+  grid.innerHTML = html;
 }
 
 function switchTab(tabId, el) {
