@@ -871,6 +871,36 @@ const HISTORICAL_ODDS = {
   "ghana_panama": { favoriteId: "ghana", handicap: 0.5, overUnder: 2.25 }
 };
 
+function estimateOddsFromRating(t1, t2) {
+  const rating1 = t1.rating || 1500;
+  const rating2 = t2.rating || 1500;
+  const diff = rating1 - rating2;
+
+  const absDiff = Math.abs(diff);
+  let rawHandicap = 0;
+  if (absDiff >= 250) rawHandicap = 1.5;
+  else if (absDiff >= 180) rawHandicap = 1.25;
+  else if (absDiff >= 120) rawHandicap = 1.0;
+  else if (absDiff >= 80) rawHandicap = 0.75;
+  else if (absDiff >= 40) rawHandicap = 0.5;
+  else if (absDiff >= 15) rawHandicap = 0.25;
+
+  const favoriteId = diff >= 0 ? t1.id : t2.id;
+
+  const attackSum = (t1.attack || 75) + (t2.attack || 75);
+  let overUnder = 2.5;
+  if (attackSum >= 165) overUnder = 3.0;
+  else if (attackSum >= 158) overUnder = 2.75;
+  else if (attackSum <= 140) overUnder = 2.25;
+
+  return {
+    favoriteId,
+    handicap: rawHandicap,
+    overUnder,
+    isReal: false
+  };
+}
+
 function getMatchOdds(m) {
   // 1. Ưu tiên hàng đầu: Kèo do người dùng nhập bằng tay
   const key = getMatchKey(m);
@@ -912,7 +942,14 @@ function getMatchOdds(m) {
     };
   }
 
-  // Loại bỏ hoàn toàn tự động ước lượng kèo bằng ELO/AI, trả về null để hiển thị "Chưa cập nhật kèo"
+  // 4. Nếu là trận đã diễn ra hoặc đang diễn ra mà không có sẵn kèo:
+  // Tự động tính toán theo ELO/Rating làm fallback để không bị mất kèo cũ
+  if (m.status === "completed" || m.status === "live") {
+    return estimateOddsFromRating(m.team1, m.team2);
+  }
+
+  // Loại bỏ hoàn toàn tự động ước lượng kèo bằng ELO/AI cho các trận sắp diễn ra
+  // Trả về null để hiển thị "Chưa cập nhật kèo" cho người dùng nhập tay
   return null;
 }
 
