@@ -34,6 +34,13 @@ function getFlagHtml(emoji, name = "", sizeClass = "normal") {
   }
 }
 
+function getMatchKey(m) {
+  if (!m || !m.team1 || !m.team2) return "";
+  const teams = [m.team1.id, m.team2.id].sort();
+  const stage = VALID_GROUPS.includes(m.group) ? "group" : (m.group || "ko");
+  return `${teams.join("_")}_${stage}`;
+}
+
 // ──────────────────────────────────────────────
 // KHỞI ĐỘNG
 // ──────────────────────────────────────────────
@@ -89,7 +96,23 @@ function initApp() {
   const savedManualOdds = localStorage.getItem("wc2026_manual_odds");
   if (savedManualOdds) {
     try {
-      state.manualOdds = JSON.parse(savedManualOdds);
+      const parsed = JSON.parse(savedManualOdds);
+      state.manualOdds = {};
+      
+      // Migrate old integer keys to new stable keys
+      Object.entries(parsed).forEach(([key, val]) => {
+        const matchId = parseInt(key);
+        if (!isNaN(matchId)) {
+          const m = state.matches.find(match => match.id === matchId);
+          if (m) {
+            const stableKey = getMatchKey(m);
+            state.manualOdds[stableKey] = val;
+          }
+        } else {
+          state.manualOdds[key] = val;
+        }
+      });
+      localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
     } catch (e) {
       state.manualOdds = {};
     }
@@ -720,11 +743,12 @@ const HISTORICAL_ODDS = {
 
 function getMatchOdds(m) {
   // 1. Ưu tiên hàng đầu: Kèo do người dùng nhập bằng tay
-  if (state.manualOdds && state.manualOdds[m.id]) {
+  const key = getMatchKey(m);
+  if (state.manualOdds && state.manualOdds[key]) {
     return {
-      favoriteId: state.manualOdds[m.id].favoriteId,
-      handicap: state.manualOdds[m.id].handicap,
-      overUnder: state.manualOdds[m.id].overUnder,
+      favoriteId: state.manualOdds[key].favoriteId,
+      handicap: state.manualOdds[key].handicap,
+      overUnder: state.manualOdds[key].overUnder,
       isReal: true,
       isManual: true
     };
@@ -758,26 +782,8 @@ function getMatchOdds(m) {
     };
   }
 
-  // 3. Tự động tính toán ước lượng theo chỉ số sức mạnh nếu chưa có tỷ lệ từ nhà cái
-  const powerDiff = m.team1.rating - m.team2.rating;
-  const favoriteId = powerDiff >= 0 ? m.team1.id : m.team2.id;
-  const diffAbs = Math.abs(powerDiff);
-  
-  let handicap = 0.5;
-  if (diffAbs < 30) handicap = 0;
-  else if (diffAbs < 90) handicap = 0.25;
-  else if (diffAbs < 160) handicap = 0.5;
-  else if (diffAbs < 240) handicap = 0.75;
-  else if (diffAbs < 320) handicap = 1.0;
-  else if (diffAbs < 420) handicap = 1.25;
-  else handicap = 1.5;
-
-  return {
-    favoriteId: favoriteId,
-    handicap: handicap,
-    overUnder: 2.5, // Mặc định Tài Xỉu là 2.5
-    isReal: false
-  };
+  // Loại bỏ hoàn toàn tự động ước lượng kèo bằng ELO/AI, trả về null để hiển thị "Chưa cập nhật kèo"
+  return null;
 }
 
 function calcHandicapResult(m, odds) {
@@ -1779,12 +1785,16 @@ function closeManualOddsModal() {
 }
 
 function saveManualOdds(matchId) {
+  const m = state.matches.find(match => match.id === matchId);
+  if (!m) return;
+
   const favoriteId = document.getElementById("mo-fav-id").value;
   const handicap = parseFloat(document.getElementById("mo-handicap").value);
   const overUnder = parseFloat(document.getElementById("mo-ou").value);
 
+  const key = getMatchKey(m);
   if (!state.manualOdds) state.manualOdds = {};
-  state.manualOdds[matchId] = { favoriteId, handicap, overUnder };
+  state.manualOdds[key] = { favoriteId, handicap, overUnder };
 
   localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
   closeManualOddsModal();
@@ -1793,8 +1803,12 @@ function saveManualOdds(matchId) {
 }
 
 function clearManualOdds(matchId) {
-  if (state.manualOdds && state.manualOdds[matchId]) {
-    delete state.manualOdds[matchId];
+  const m = state.matches.find(match => match.id === matchId);
+  if (!m) return;
+
+  const key = getMatchKey(m);
+  if (state.manualOdds && state.manualOdds[key]) {
+    delete state.manualOdds[key];
     localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
   }
   closeManualOddsModal();
