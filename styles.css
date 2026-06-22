@@ -2174,4 +2174,54 @@ header {
 
 .ko-format-details .ko-format-card::before {
   display: none; /* Hide the sidebar gradient inside the details */
+}
+
+/* Responsive bracket style for mobile screens */
+@media (max-width: 767px) {
+  .bracket-container {
+    padding: 10px;
+  }
+  
+  .bracket-scroll-wrapper {
+    min-width: 1000px; /* Compact width on mobile for easier scrolling */
+    gap: 8px;
+  }
+  
+  .bracket-column {
+    min-width: 100px;
+  }
+  
+  .bracket-column-title {
+    font-size: 8px;
+    padding: 4px 6px;
+    margin-bottom: 8px;
+  }
+  
+  .bracket-match-list {
+    height: 400px; /* Decrease height on mobile */
+  }
+  
+  .bracket-match-node {
+    padding: 4px 6px;
+    font-size: 9px;
+    border-radius: 8px;
+    gap: 2px;
+  }
+  
+  .bracket-node-header {
+    font-size: 8px;
+  }
+  
+  .bracket-node-team {
+    height: 18px;
+  }
+  
+  .bracket-team-name {
+    max-width: 55px;
+  }
+  
+  .bracket-team-score {
+    font-size: 10px;
+    padding-left: 4px;
+  }
 }
