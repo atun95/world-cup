@@ -563,7 +563,14 @@ function renderKnockout() {
   ];
 
   let html = `
-    <div class="bracket-container">
+    <!-- Thanh điều hướng nhanh trên Mobile -->
+    <div class="bracket-nav-mobile">
+      <button class="br-nav-btn active" onclick="scrollBracket('left')">◀ Nhánh Trái</button>
+      <button class="br-nav-btn" onclick="scrollBracket('center')">🏆 Chung Kết</button>
+      <button class="br-nav-btn" onclick="scrollBracket('right')">Nhánh Phải ▶</button>
+    </div>
+
+    <div class="bracket-container" onscroll="syncBracketNavActiveButton()">
       <div class="bracket-scroll-wrapper">
   `;
 
@@ -589,6 +596,52 @@ function renderKnockout() {
   `;
 
   grid.innerHTML = html;
+}
+
+function scrollBracket(dir) {
+  const container = document.querySelector(".bracket-container");
+  if (!container) return;
+  const maxScroll = container.scrollWidth - container.clientWidth;
+  
+  const buttons = document.querySelectorAll(".br-nav-btn");
+  buttons.forEach(btn => btn.classList.remove("active"));
+  
+  let targetBtn = null;
+  if (dir === 'left') {
+    container.scrollTo({ left: 0, behavior: 'smooth' });
+    targetBtn = buttons[0];
+  } else if (dir === 'right') {
+    container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+    targetBtn = buttons[2];
+  } else {
+    container.scrollTo({ left: maxScroll / 2, behavior: 'smooth' });
+    targetBtn = buttons[1];
+  }
+  if (targetBtn) targetBtn.classList.add("active");
+}
+
+function syncBracketNavActiveButton() {
+  const container = document.querySelector(".bracket-container");
+  if (!container) return;
+  const maxScroll = container.scrollWidth - container.clientWidth;
+  if (maxScroll <= 0) return;
+  
+  const scrollLeft = container.scrollLeft;
+  const ratio = scrollLeft / maxScroll;
+  
+  let activeIdx = 1;
+  if (ratio < 0.3) {
+    activeIdx = 0;
+  } else if (ratio > 0.7) {
+    activeIdx = 2;
+  }
+  
+  const buttons = document.querySelectorAll(".br-nav-btn");
+  if (buttons.length === 3) {
+    buttons.forEach((btn, idx) => {
+      btn.classList.toggle("active", idx === activeIdx);
+    });
+  }
 }
 
 function switchTab(tabId, el) {
