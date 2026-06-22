@@ -1936,7 +1936,7 @@ function editManualOdds(matchId) {
         </div>
 
         <div style="display:flex; gap:10px; margin-top:8px;">
-          <button onclick="saveManualOdds(${matchId})" style="flex:1; background:var(--primary-color); border:none; color:#000; padding:8px; border-radius:6px; font-weight:700; cursor:pointer;">Lưu lại</button>
+          <button onclick="saveManualOdds(${matchId})" style="flex:1; background:var(--accent-cyan); border:none; color:#0b0f19; padding:8px; border-radius:6px; font-weight:800; cursor:pointer; box-shadow:0 0 10px rgba(0,212,255,0.3); transition:all 0.2s;">Lưu lại</button>
           <button onclick="clearManualOdds(${matchId})" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#f87171; padding:8px; border-radius:6px; font-weight:600; cursor:pointer;">Xóa kèo</button>
         </div>
       </div>
