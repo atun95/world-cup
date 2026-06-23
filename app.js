@@ -546,7 +546,60 @@ function getBracketRoundIndex(m) {
   return -1;
 }
 
-function buildBracketNodeHtml(templateNode, matchFromState) {
+// Kiểm tra xem tên đội có phải là tên đại diện/placeholder hay không
+function isPlaceholderTeam(name) {
+  if (!name) return true;
+  return isPlaceholder(name) || name.startsWith("Nhất ") || name.startsWith("Nhì ") || name.startsWith("Ba ") || name.startsWith("Thắng ") || name.startsWith("Thua ");
+}
+
+// Giải mã các chuỗi đại diện (placeholder) như "Nhất A", "Nhì B", "Ba C/D/E/F" thành tên đội tuyển thật và emoji cờ dựa trên BXH hiện tại
+function resolveTeamNameAndEmoji(text, standings, bestThirds) {
+  if (!text) return { name: "Chờ xác định", emoji: "" };
+
+  // 1. Nhất bảng
+  const matchFirst = text.match(/Nhất\s+([A-L])/i);
+  if (matchFirst) {
+    const group = matchFirst[1].toUpperCase();
+    const team = standings[group] ? standings[group][0] : null;
+    if (team) {
+      return { name: team.name, emoji: team.emoji };
+    }
+  }
+
+  // 2. Nhì bảng
+  const matchSecond = text.match(/Nhì\s+([A-L])/i);
+  if (matchSecond) {
+    const group = matchSecond[1].toUpperCase();
+    const team = standings[group] ? standings[group][1] : null;
+    if (team) {
+      return { name: team.name, emoji: team.emoji };
+    }
+  }
+
+  // 3. Đội hạng 3 tốt nhất (Ba ...)
+  if (text.startsWith("Ba ")) {
+    const thirdPlaceMapping = {
+      "Ba C/D/E/F": 0,
+      "Ba C/D/F/G/H": 1,
+      "Ba C/E/F/H/I": 2,
+      "Ba E/H/I/J/K": 3,
+      "Ba A/E/H/I/J": 4,
+      "Ba B/E/F/I/J": 5,
+      "Ba E/F/G/I/J": 6,
+      "Ba D/E/I/J/L": 7
+    };
+    const index = thirdPlaceMapping[text];
+    if (index !== undefined && bestThirds && bestThirds[index]) {
+      const team = bestThirds[index].team;
+      return { name: team.name, emoji: team.emoji };
+    }
+  }
+
+  // 4. Các trường hợp khác ("Thắng Trận 1", "Chung Kết", v.v.)
+  return { name: text, emoji: "" };
+}
+
+function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThirds) {
   let t1Name = templateNode.t1;
   let t2Name = templateNode.t2;
   let t1Emoji = "";
@@ -559,11 +612,24 @@ function buildBracketNodeHtml(templateNode, matchFromState) {
   let t1Winner = false;
   let t2Winner = false;
 
+  // Lấy tên và cờ mặc định sau khi đã giải mã từ BXH vòng bảng
+  const resolvedT1 = resolveTeamNameAndEmoji(templateNode.t1, standings, bestThirds);
+  const resolvedT2 = resolveTeamNameAndEmoji(templateNode.t2, standings, bestThirds);
+  t1Name = resolvedT1.name;
+  t1Emoji = resolvedT1.emoji;
+  t2Name = resolvedT2.name;
+  t2Emoji = resolvedT2.emoji;
+
   if (matchFromState) {
-    t1Name = matchFromState.team1?.name || templateNode.t1;
-    t2Name = matchFromState.team2?.name || templateNode.t2;
-    t1Emoji = matchFromState.team1?.emoji || "";
-    t2Emoji = matchFromState.team2?.emoji || "";
+    // Nếu trận đấu thực tế đã có trong trạng thái, ưu tiên dùng thông tin thật nếu tên đội không phải placeholder
+    if (matchFromState.team1 && !isPlaceholderTeam(matchFromState.team1.name)) {
+      t1Name = matchFromState.team1.name;
+      t1Emoji = matchFromState.team1.emoji || "";
+    }
+    if (matchFromState.team2 && !isPlaceholderTeam(matchFromState.team2.name)) {
+      t2Name = matchFromState.team2.name;
+      t2Emoji = matchFromState.team2.emoji || "";
+    }
     
     if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score1 = matchFromState.score1;
     if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score2 = matchFromState.score2;
@@ -608,6 +674,34 @@ function renderKnockout() {
 
   if (placeholder) placeholder.style.display = "none";
 
+  // 1. Tính toán bảng xếp hạng hiện tại từ các trận đấu
+  const standings = calculateStandings(state.matches);
+
+  // 2. Tìm 8 đội hạng 3 tốt nhất
+  const thirdPlacedTeams = [];
+  VALID_GROUPS.forEach(g => {
+    const groupTeams = standings[g];
+    if (groupTeams && groupTeams.length >= 3) {
+      thirdPlacedTeams.push({
+        group: g,
+        team: groupTeams[2]
+      });
+    }
+  });
+
+  thirdPlacedTeams.sort((a, b) => {
+    const tA = a.team;
+    const tB = b.team;
+    return tB.pts !== tA.pts ? tB.pts - tA.pts :
+           tB.gd  !== tA.gd  ? tB.gd  - tA.gd  :
+           tB.gf  !== tA.gf  ? tB.gf  - tA.gf  :
+           tB.rating - tA.rating;
+  });
+
+  const bestThirds = thirdPlacedTeams.slice(0, 8);
+  // Sắp xếp các đội thứ 3 theo thứ tự bảng đấu từ A-L để gán cố định vào các nhánh
+  bestThirds.sort((a, b) => a.group.localeCompare(b.group));
+
   const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
 
   const stateRounds = [[], [], [], [], []];
@@ -650,7 +744,7 @@ function renderKnockout() {
   cols.forEach(col => {
     const nodesHtml = col.template.map((node, nodeIdx) => {
       const match = col.matches[nodeIdx] || null;
-      return buildBracketNodeHtml(node, match);
+      return buildBracketNodeHtml(node, match, standings, bestThirds);
     }).join("");
 
     html += `
