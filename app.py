@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import os
+import json
 
 # 1. Cấu hình trang
 st.set_page_config(
@@ -31,92 +32,42 @@ st.markdown("""
             display: none !important;
         }
     </style>
-    <svg onload="
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'streamlit:setComponentValue') {
-                const iframes = document.querySelectorAll('iframe');
-                iframes.forEach(iframe => {
-                    if (iframe.contentWindow === e.source) {
-                        iframe.style.height = (e.data.value + 10) + 'px';
-                    }
-                });
-            }
-        });
-    " style="display:none;"></svg>
 """, unsafe_allow_html=True)
 
-def load_web_app():
-    with open("index.html", "r", encoding="utf-8") as f:
-        html_content = f.read()
-
-    if os.path.exists("styles.css"):
-        with open("styles.css", "r", encoding="utf-8") as f:
-            css_content = f.read()
-        style_tag = f"<style>{css_content}</style>"
-        html_content = html_content.replace('<link rel="stylesheet" href="styles.css">', style_tag)
-
-    import re
-    js_bundle = ""
-    if os.path.exists("data.js"):
-        with open("data.js", "r", encoding="utf-8") as f:
-            js_bundle += f"\n{f.read()}\n"
-        html_content = re.sub(r'<script\s+src="data\.js(?:\?v=[^"]*)?"></script>', '', html_content)
-
-    if os.path.exists("app.js"):
-        with open("app.js", "r", encoding="utf-8") as f:
-            js_bundle += f"\n{f.read()}\n"
-        html_content = re.sub(r'<script\s+src="app\.js(?:\?v=[^"]*)?"></script>', '', html_content)
-
-    # SỬA LỖI LAG: Thêm đoạn Script tự động cập nhật chiều cao thực tế lên trang mẹ Streamlit
-    auto_height_script = """
-    <script>
-        function sendHeight() {
-            const wrapper = document.getElementById('app-wrapper');
-            const height = wrapper ? wrapper.offsetHeight : (document.documentElement.scrollHeight || document.body.scrollHeight);
-            window.parent.postMessage({
-                type: 'streamlit:setComponentValue',
-                value: height
-            }, '*');
-            
-            // Cập nhật lại khung height của iframe ngay lập tức (nếu cùng origin)
-            try {
-                if (window.frameElement) {
-                    window.frameElement.style.height = height + 'px';
-                }
-            } catch (e) {}
-        }
-        // Chạy khi nạp trang xong
-        window.addEventListener('load', () => {
-            setTimeout(sendHeight, 300);
-        });
-        // Chạy lại khi người dùng bấm chuyển Tab (Matches, Standings...)
-        document.addEventListener('click', () => {
-            setTimeout(sendHeight, 100);
-        });
-        // Theo dõi sự thay đổi kích thước của trang
-        const resizeObserver = new ResizeObserver(() => sendHeight());
-        const wrapperEl = document.getElementById('app-wrapper');
-        if (wrapperEl) {
-            resizeObserver.observe(wrapperEl);
-        } else {
-            resizeObserver.observe(document.body);
-        }
-    </script>
-    """
-    
-    if js_bundle:
-        script_tag = f"<script>{js_bundle}</script>{auto_height_script}"
-        html_content = html_content.replace('</body>', f'{script_tag}</body>')
-    else:
-        html_content = html_content.replace('</body>', f'{auto_height_script}</body>')
-
-    return html_content
-
+# 3. Khai báo Streamlit Custom Component để giao tiếp 2 chiều
 try:
-    final_html = load_web_app()
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    parent_dir = "."
+
+world_cup_tracker = components.declare_component("world_cup_tracker", path=parent_dir)
+
+# 4. Tải tỷ lệ kèo từ file manual_odds.json trên server
+odds_file = os.path.join(parent_dir, "manual_odds.json")
+if os.path.exists(odds_file):
+    try:
+        with open(odds_file, "r", encoding="utf-8") as f:
+            server_manual_odds = json.load(f)
+    except Exception:
+        server_manual_odds = {}
+else:
+    server_manual_odds = {}
+
+# 5. Gọi component và truyền dữ liệu tỷ lệ kèo từ server xuống frontend
+try:
+    # Chiều cao ban đầu đặt tạm 1600, script bên Javascript sẽ tự động gửi chiều cao thực tế để kéo giãn iframe.
+    new_manual_odds = world_cup_tracker(
+        server_manual_odds=server_manual_odds, 
+        key="wc_tracker_comp", 
+        height=1600
+    )
     
-    # ĐỔI THÀNH scrolling=False để loại bỏ hoàn toàn thanh cuộn lồng, giúp cuộn mượt 100%
-    # Chiều cao ban đầu đặt tạm 1600, script phía trên sẽ tự động kéo giãn ra sau.
-    components.html(final_html, height=1600, scrolling=False)
+    # 6. Nếu người dùng nhập kèo mới từ giao diện, lưu vào file trên server và tải lại trang để đồng bộ
+    if new_manual_odds is not None:
+        # Kiểm tra xem dữ liệu trả về có hợp lệ không và có khác với dữ liệu hiện tại trên server không
+        if isinstance(new_manual_odds, dict) and new_manual_odds != server_manual_odds:
+            with open(odds_file, "w", encoding="utf-8") as f:
+                json.dump(new_manual_odds, f, ensure_ascii=False, indent=2)
+            st.rerun()
 except Exception as e:
     st.error(f"Đã xảy ra lỗi khi nạp giao diện: {e}")

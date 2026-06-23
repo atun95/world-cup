@@ -3,6 +3,76 @@
 
 let state = { matches: [], lastSync: null, syncSource: null, showAllUpcomingOdds: false };
 
+// ──────────────────────────────────────────────
+// HỖ TRỢ GIAO TIẾP VỚI STREAMLIT COMPONENT (2 CHIỀU)
+// ──────────────────────────────────────────────
+const StreamlitHelper = {
+  sendReady() {
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: "streamlit:componentReady",
+      apiVersion: 1
+    }, "*");
+  },
+  setHeight(height) {
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: "streamlit:setFrameHeight",
+      height: height
+    }, "*");
+  },
+  setValue(value) {
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: "streamlit:setComponentValue",
+      value: value
+    }, "*");
+  }
+};
+
+// Lắng nghe sự kiện render từ Streamlit để cập nhật tỷ lệ kèo từ server
+window.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "streamlit:render") {
+    const args = event.data.args;
+    if (args && args.server_manual_odds) {
+      // Cập nhật state.manualOdds từ server
+      state.manualOdds = args.server_manual_odds;
+      
+      // Đồng thời lưu vào localStorage làm dự phòng
+      localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+      
+      // Vẽ lại giao diện
+      renderAll();
+    }
+  }
+});
+
+function sendHeight() {
+  const wrapper = document.getElementById('app-wrapper');
+  const height = wrapper ? wrapper.offsetHeight : (document.documentElement.scrollHeight || document.body.scrollHeight);
+  StreamlitHelper.setHeight(height + 20);
+}
+
+// Gọi sendHeight khi load, click và resize
+window.addEventListener('load', () => {
+  setTimeout(sendHeight, 300);
+});
+document.addEventListener('click', () => {
+  setTimeout(sendHeight, 100);
+});
+try {
+  const resizeObserver = new ResizeObserver(() => sendHeight());
+  const wrapperEl = document.getElementById('app-wrapper');
+  if (wrapperEl) {
+    resizeObserver.observe(wrapperEl);
+  } else {
+    resizeObserver.observe(document.body);
+  }
+} catch (e) {
+  console.warn("ResizeObserver not supported:", e);
+}
+
+
 const VALID_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 // ──────────────────────────────────────────────
@@ -122,6 +192,9 @@ function initApp() {
 
   saveMatches();
   renderAll();
+  
+  // Báo cáo component đã sẵn sàng cho Streamlit
+  StreamlitHelper.sendReady();
 
   // Tự động đồng bộ khi mở app (không hiện alert)
   syncOfficialData(false);
@@ -1679,6 +1752,10 @@ function saveManualOdds(matchId) {
   state.manualOdds[key] = { favoriteId, handicap, overUnder };
 
   localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+  
+  // Gửi tỷ lệ kèo mới lên server qua Streamlit
+  StreamlitHelper.setValue(state.manualOdds);
+
   closeManualOddsModal();
   renderAll();
   showToast("Đã cập nhật kèo thủ công thành công!", "success");
@@ -1692,6 +1769,9 @@ function clearManualOdds(matchId) {
   if (state.manualOdds && state.manualOdds[key]) {
     delete state.manualOdds[key];
     localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+    
+    // Gửi tỷ lệ kèo mới lên server qua Streamlit (sau khi đã xóa)
+    StreamlitHelper.setValue(state.manualOdds);
   }
   closeManualOddsModal();
   renderAll();
