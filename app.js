@@ -552,7 +552,7 @@ function isPlaceholderTeam(name) {
   return isPlaceholder(name) || name.startsWith("Nhất ") || name.startsWith("Nhì ") || name.startsWith("Ba ") || name.startsWith("Thắng ") || name.startsWith("Thua ");
 }
 
-// Giải mã các chuỗi đại diện (placeholder) như "Nhất A", "Nhì B", "Ba C/D/E/F" thành tên đội tuyển thật và emoji cờ dựa trên BXH hiện tại
+// Giải mã các chuỗi đại diện (placeholder) như "Nhất A", "Nhì B" thành tên đội tuyển thật và emoji cờ dựa trên BXH hiện tại (giữ nguyên đội hạng 3 là "Ba C/D/E/F" v.v.)
 function resolveTeamNameAndEmoji(text, standings, bestThirds) {
   if (!text) return { name: "Chờ xác định", emoji: "" };
 
@@ -576,26 +576,7 @@ function resolveTeamNameAndEmoji(text, standings, bestThirds) {
     }
   }
 
-  // 3. Đội hạng 3 tốt nhất (Ba ...)
-  if (text.startsWith("Ba ")) {
-    const thirdPlaceMapping = {
-      "Ba C/D/E/F": 0,
-      "Ba C/D/F/G/H": 1,
-      "Ba C/E/F/H/I": 2,
-      "Ba E/H/I/J/K": 3,
-      "Ba A/E/H/I/J": 4,
-      "Ba B/E/F/I/J": 5,
-      "Ba E/F/G/I/J": 6,
-      "Ba D/E/I/J/L": 7
-    };
-    const index = thirdPlaceMapping[text];
-    if (index !== undefined && bestThirds && bestThirds[index]) {
-      const team = bestThirds[index].team;
-      return { name: team.name, emoji: team.emoji };
-    }
-  }
-
-  // 4. Các trường hợp khác ("Thắng Trận 1", "Chung Kết", v.v.)
+  // 3. Các trường hợp khác ("Ba C/D/E/F", "Thắng Trận 1", "Chung Kết", v.v.)
   return { name: text, emoji: "" };
 }
 
