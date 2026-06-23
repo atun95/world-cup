@@ -1,7 +1,7 @@
 // app.js – World Cup 2026 Results Tracker
 // Chỉ theo dõi kết quả thực tế, không có tính năng cá cược
 
-let state = { matches: [], lastSync: null, syncSource: null };
+let state = { matches: [], lastSync: null, syncSource: null, showAllUpcomingOdds: false };
 
 const VALID_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
@@ -992,7 +992,17 @@ function getMatchOdds(m) {
     };
   }
 
-  // Trả về null nếu không có kèo thủ công hoặc kèo đồng bộ từ nhà cái
+  // Giữ nguyên tỷ lệ kèo AI/ELO cho các trận đấu đã diễn ra trước trận Bồ Đào Nha vs Uzbekistan (2026-06-22T18:00)
+  // Chỉ từ trận Bồ Đào Nha vs Uzbekistan trở đi mới không dùng AI và cho phép nhập tay
+  const matchDateTime = new Date(`${m.date}T${m.time}`);
+  const cutoffDateTime = new Date("2026-06-22T18:00:00");
+
+  if (matchDateTime < cutoffDateTime) {
+    if (m.status === "completed" || m.status === "live") {
+      return estimateOddsFromRating(m.team1, m.team2);
+    }
+  }
+
   return null;
 }
 
@@ -1028,30 +1038,6 @@ function renderOddsResults() {
 
   // Lấy tất cả các trận đấu
   const list = [...state.matches];
-
-  // Sắp xếp: Trận đang đá (live) -> Trận sắp diễn ra (upcoming, gần nhất trước) -> Trận đã kết thúc (completed, mới nhất trước)
-  list.sort((a, b) => {
-    // 1. Trận live lên đầu
-    if (a.status === "live" && b.status !== "live") return -1;
-    if (b.status === "live" && a.status !== "live") return 1;
-    if (a.status === "live" && b.status === "live") {
-      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
-    }
-
-    // 2. Trận sắp diễn ra (upcoming) lên trước trận đã kết thúc (completed)
-    if (a.status === "upcoming" && b.status === "completed") return -1;
-    if (a.status === "completed" && b.status === "upcoming") return 1;
-
-    // 3. Sắp xếp trong cùng nhóm:
-    if (a.status === "upcoming" && b.status === "upcoming") {
-      // Trận sắp diễn ra: gần nhất -> xa nhất (tăng dần)
-      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
-    } else {
-      // Trận đã kết thúc: mới nhất -> cũ nhất (giảm dần)
-      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
-    }
-  });
-
   const completed = list.filter(m => m.status === "completed");
 
   if (list.length === 0) {
@@ -1079,12 +1065,39 @@ function renderOddsResults() {
     }
   });
 
-  const rows = list.map(m => {
+  // Tách các loại trận đấu để sắp xếp và hiển thị
+  const liveMatches = list.filter(m => m.status === "live");
+  const upcomingMatches = list.filter(m => m.status === "upcoming");
+  const completedMatches = list.filter(m => m.status === "completed");
+
+  // Sắp xếp
+  liveMatches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+  upcomingMatches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+  completedMatches.sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+
+  // Thu gọn các trận sắp diễn ra: mặc định chỉ hiện 4 trận gần nhất
+  let visibleUpcoming = [...upcomingMatches];
+  let showToggleRow = false;
+  let remainingCount = 0;
+
+  if (upcomingMatches.length > 4) {
+    if (!state.hasOwnProperty("showAllUpcomingOdds")) {
+      state.showAllUpcomingOdds = false;
+    }
+    if (!state.showAllUpcomingOdds) {
+      visibleUpcoming = upcomingMatches.slice(0, 4);
+      showToggleRow = true;
+      remainingCount = upcomingMatches.length - 4;
+    }
+  }
+
+  // Hàm phụ vẽ từng hàng trận đấu
+  function renderOddsRowHtml(m) {
     const odds = getMatchOdds(m);
     
     const isGroupMatch = VALID_GROUPS.includes(m.group);
     const dateFormatted = formatDate(m.date);
-    const dateShort = dateFormatted.substring(0, 5); // Omit year (e.g. "20/06")
+    const dateShort = dateFormatted.substring(0, 5); // Bỏ năm
     
     const metaTextFull = isGroupMatch
       ? `Bảng ${m.group} • L${m.round} • ${dateFormatted}`
@@ -1222,9 +1235,41 @@ function renderOddsResults() {
           <span class="odds-tag ${ouClass}">${ouText}</span>
         </td>
       </tr>`;
-  }).join("");
+  }
 
-  tbody.innerHTML = rows;
+  const liveRows = liveMatches.map(m => renderOddsRowHtml(m));
+  const upcomingRows = visibleUpcoming.map(m => renderOddsRowHtml(m));
+  const completedRows = completedMatches.map(m => renderOddsRowHtml(m));
+
+  let toggleRowHtml = "";
+  if (upcomingMatches.length > 4) {
+    if (showToggleRow) {
+      toggleRowHtml = `
+        <tr id="odds-upcoming-toggle-row">
+          <td colspan="4" style="text-align:center; padding: 14px 12px; background: rgba(6, 182, 212, 0.02); border-top: 1px dashed rgba(6, 182, 212, 0.15); border-bottom: 1px dashed rgba(6, 182, 212, 0.15);">
+            <button onclick="toggleUpcomingOdds(true)" style="background: rgba(6, 182, 212, 0.12); border: 1.5px solid rgba(6, 182, 212, 0.35); color: var(--accent-cyan); padding: 5px 14px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+              ➕ Xem tất cả các trận sắp diễn ra (còn ẩn ${remainingCount} trận)
+            </button>
+          </td>
+        </tr>`;
+    } else {
+      toggleRowHtml = `
+        <tr id="odds-upcoming-toggle-row">
+          <td colspan="4" style="text-align:center; padding: 14px 12px; background: rgba(255, 255, 255, 0.01); border-top: 1px dashed rgba(255,255,255,0.06); border-bottom: 1px dashed rgba(255,255,255,0.06);">
+            <button onclick="toggleUpcomingOdds(false)" style="background: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.12); color: var(--text-sub); padding: 5px 14px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+              ➖ Thu gọn danh sách trận sắp diễn ra
+            </button>
+          </td>
+        </tr>`;
+    }
+  }
+
+  tbody.innerHTML = [
+    ...liveRows,
+    ...upcomingRows,
+    toggleRowHtml ? [toggleRowHtml] : [],
+    ...completedRows
+  ].flat().join("");
 
   // Summary bar (chỉ tính cho các trận đã kết thúc)
   if (summaryBar) {
@@ -1298,6 +1343,12 @@ function renderOddsResults() {
     `;
   }
 }
+
+// Hàm global hỗ trợ bấm nút thu gọn/mở rộng trận sắp diễn ra
+window.toggleUpcomingOdds = function(showAll) {
+  state.showAllUpcomingOdds = showAll;
+  renderOddsResults();
+};
 
 // ──────────────────────────────────────────────
 // ĐỒNG BỘ TỶ LỆ KÈO THỰC TẾ (THE ODDS API)
