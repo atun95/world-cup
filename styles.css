@@ -1056,6 +1056,19 @@ header {
   border: 1px solid rgba(255, 209, 77, 0.25);
 }
 
+.tag-pending {
+  background: rgba(155, 163, 196, 0.1);
+  color: var(--text-sub);
+  border: 1px solid rgba(155, 163, 196, 0.2);
+}
+
+.tag-live {
+  background: rgba(255, 62, 108, 0.12);
+  color: var(--accent-pink);
+  border: 1px solid rgba(255, 62, 108, 0.25);
+  animation: blink 1.5s ease-in-out infinite;
+}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px) {
   .dashboard-grid {

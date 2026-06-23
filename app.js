@@ -311,13 +311,13 @@ function buildMatchCard(m) {
     oddsHtml = `
       <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
         <span style="font-size:11px;">⚖️ <strong>Chấp:</strong> ${handicapText} &nbsp; 🔥 <strong>T/X:</strong> ${odds.overUnder}</span>
-        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>
+        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>
       </div>`;
   } else {
     oddsHtml = `
       <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
         <span style="font-size:11px; color:var(--text-muted);">⚖️ Chưa cập nhật kèo</span>
-        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>
+        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>
       </div>`;
   }
 
@@ -992,14 +992,7 @@ function getMatchOdds(m) {
     };
   }
 
-  // 4. Nếu là trận đã diễn ra hoặc đang diễn ra mà không có sẵn kèo:
-  // Tự động tính toán theo ELO/Rating làm fallback để không bị mất kèo cũ
-  if (m.status === "completed" || m.status === "live") {
-    return estimateOddsFromRating(m.team1, m.team2);
-  }
-
-  // Loại bỏ hoàn toàn tự động ước lượng kèo bằng ELO/AI cho các trận sắp diễn ra
-  // Trả về null để hiển thị "Chưa cập nhật kèo" cho người dùng nhập tay
+  // Trả về null nếu không có kèo thủ công hoặc kèo đồng bộ từ nhà cái
   return null;
 }
 
@@ -1033,99 +1026,62 @@ function renderOddsResults() {
   const summaryBar = document.getElementById("odds-summary-bar");
   if (!tbody) return;
 
-  const completed = state.matches.filter(m =>
-    m.status === "completed"
-  );
+  // Lấy tất cả các trận đấu
+  const list = [...state.matches];
 
-  // Sắp xếp: Trận đấu mới nhất lên đầu
-  completed.sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+  // Sắp xếp: Trận đang đá (live) -> Trận sắp diễn ra (upcoming, gần nhất trước) -> Trận đã kết thúc (completed, mới nhất trước)
+  list.sort((a, b) => {
+    // 1. Trận live lên đầu
+    if (a.status === "live" && b.status !== "live") return -1;
+    if (b.status === "live" && a.status !== "live") return 1;
+    if (a.status === "live" && b.status === "live") {
+      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    }
 
-  if (completed.length === 0) {
+    // 2. Trận sắp diễn ra (upcoming) lên trước trận đã kết thúc (completed)
+    if (a.status === "upcoming" && b.status === "completed") return -1;
+    if (a.status === "completed" && b.status === "upcoming") return 1;
+
+    // 3. Sắp xếp trong cùng nhóm:
+    if (a.status === "upcoming" && b.status === "upcoming") {
+      // Trận sắp diễn ra: gần nhất -> xa nhất (tăng dần)
+      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    } else {
+      // Trận đã kết thúc: mới nhất -> cũ nhất (giảm dần)
+      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
+    }
+  });
+
+  const completed = list.filter(m => m.status === "completed");
+
+  if (list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:50px">
-      <div style="font-size:36px;margin-bottom:12px">⚽</div>Chưa có trận nào hoàn thành</td></tr>`;
+      <div style="font-size:36px;margin-bottom:12px">⚽</div>Chưa có trận đấu nào</td></tr>`;
     if (summaryBar) summaryBar.innerHTML = "";
     return;
   }
 
-  // Tổng hợp
+  // Tổng hợp (chỉ tính các trận đã hoàn thành)
   let favWins = 0, dogWins = 0, pushH = 0;
   let overs = 0, unders = 0, pushOU = 0;
 
-  const rows = completed.map(m => {
+  completed.forEach(m => {
     const odds = getMatchOdds(m);
-    // getMatchOdds không còn trả về null nên khối này thực chất là để dự phòng an toàn
-    if (!odds) {
-      return `
-        <tr>
-          <td>
-            <div class="odds-match-meta">Bảng ${m.group} • L${m.round} • ${formatDate(m.date)}</div>
-            <div class="odds-match-name">
-              <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span> <span class="full-name">${m.team1.name}</span><span class="short-code">${m.team1.code}</span>
-              <span style="color:var(--text-muted);margin:0 6px">vs</span>
-              <span style="display:inline-flex;align-items:center">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span> <span class="full-name">${m.team2.name}</span><span class="short-code">${m.team2.code}</span>
-            </div>
-          </td>
-          <td style="text-align:center">
-            <div class="odds-score">${m.score1} - ${m.score2}</div>
-          </td>
-          <td colspan="2" style="text-align:center;color:var(--text-muted);font-style:italic">Chưa cập nhật kèo nhà cái</td>
-        </tr>`;
+    if (odds) {
+      const hRes = calcHandicapResult(m, odds);
+      const ouRes = calcOUResult(m, odds);
+      if (hRes === "fav_win") favWins++;
+      else if (hRes === "dog_win") dogWins++;
+      else pushH++;
+      if (ouRes?.result === "over") overs++;
+      else if (ouRes?.result === "under") unders++;
+      else pushOU++;
     }
+  });
 
-    const hRes = calcHandicapResult(m, odds);
-    const ouRes = calcOUResult(m, odds);
-
-    const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
-    const dogTeam = odds.favoriteId === m.team1.id ? m.team2 : m.team1;
-
-    // Đếm thống kê
-    if (hRes === "fav_win") favWins++;
-    else if (hRes === "dog_win") dogWins++;
-    else pushH++;
-    if (ouRes?.result === "over") overs++;
-    else if (ouRes?.result === "under") unders++;
-    else pushOU++;
-
-    // Hiển thị nguồn kèo (chỉ hiển thị nhãn AI khi là kèo tự động ước lượng)
-    const oddsSourceTag = odds.isReal
-      ? ""
-      : `<span class="odds-source-badge elo" title="Kèo ước lượng của AI">AI</span>`;
-
-    // HTML kèo chấp
-    const hcapLabel = odds.handicap === 0
-      ? `<span class="full-name">Đồng banh ${oddsSourceTag}</span><span class="short-code">Đồng ${oddsSourceTag}</span>`
-      : `<span class="full-name">${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} ${favTeam.name} chấp ${odds.handicap} ${oddsSourceTag}</span>` +
-      `<span class="short-code">${favTeam.code} chấp ${odds.handicap} ${oddsSourceTag}</span>`;
-    const hcapClass = hRes === "fav_win" ? "tag-win" : hRes === "dog_win" ? "tag-lose" : "tag-push";
-
-    const hcapTextFull = hRes === "fav_win"
-      ? `✅ ${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} Thắng kèo`
-      : hRes === "dog_win"
-        ? `❌ ${getFlagHtml(dogTeam.emoji, dogTeam.name, "normal")} Bất ngờ thắng`
-        : `⚖️ Hòa kèo`;
-    const hcapTextShort = hRes === "fav_win"
-      ? `✅ Thắng`
-      : hRes === "dog_win"
-        ? `❌ Dưới`
-        : `⚖️ Hòa`;
-    const hcapText = `<span class="full-name">${hcapTextFull}</span><span class="short-code">${hcapTextShort}</span>`;
-
-    // HTML tài xỉu
-    const ouLabel = `<span class="full-name">Mốc ${odds.overUnder}</span><span class="short-code">Mốc ${odds.overUnder}</span>`;
-    const ouClass = ouRes?.result === "over" ? "tag-win" : ouRes?.result === "under" ? "tag-lose" : "tag-push";
-
-    const ouTextFull = ouRes?.result === "over"
-      ? `🔼 Tài (${ouRes.total} bàn)`
-      : ouRes?.result === "under"
-        ? `🔽 Xỉu (${ouRes.total} bàn)`
-        : `⚖️ Hòa (${ouRes.total} bàn)`;
-    const ouTextShort = ouRes?.result === "over"
-      ? `🔼 Tài (${ouRes.total})`
-      : ouRes?.result === "under"
-        ? `🔽 Xỉu (${ouRes.total})`
-        : `⚖️ Hòa (${ouRes.total})`;
-    const ouText = `<span class="full-name">${ouTextFull}</span><span class="short-code">${ouTextShort}</span>`;
-
+  const rows = list.map(m => {
+    const odds = getMatchOdds(m);
+    
     const isGroupMatch = VALID_GROUPS.includes(m.group);
     const dateFormatted = formatDate(m.date);
     const dateShort = dateFormatted.substring(0, 5); // Omit year (e.g. "20/06")
@@ -1140,6 +1096,104 @@ function renderOddsResults() {
       
     const metaText = `<span class="full-name">${metaTextFull}</span><span class="short-code">${metaTextShort}</span>`;
 
+    // Hiển thị tỉ số hoặc trạng thái
+    let scoreText = "";
+    if (m.status === "live") {
+      scoreText = `<span style="color:var(--accent-pink); font-weight:bold;">${m.score1} - ${m.score2}</span><span style="font-size:10px; display:block; color:var(--accent-pink); font-weight:bold; margin-top:2px;">🔴 LIVE ${m.minute}'</span>`;
+    } else if (m.status === "completed") {
+      scoreText = `<div class="odds-score">${m.score1} - ${m.score2}</div>`;
+    } else {
+      scoreText = `<span style="color:var(--text-muted); font-size:12px; font-weight:bold;">VS</span><span style="font-size:10px; display:block; color:var(--text-muted); margin-top:2px;">${m.time}</span>`;
+    }
+
+    if (!odds) {
+      return `
+        <tr>
+          <td>
+            <div class="odds-match-meta">${metaText}</div>
+            <div class="odds-match-name" style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+              <span class="odds-flag-span">${getFlagHtml(m.team1.emoji, m.team1.name, "normal")}</span>
+              <span class="full-name">${m.team1.name}</span>
+              <span class="short-code">${m.team1.code}</span>
+              <span class="odds-vs-span">vs</span>
+              <span class="odds-flag-span">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span>
+              <span class="full-name">${m.team2.name}</span>
+              <span class="short-code">${m.team2.code}</span>
+              <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:1px 4px; border-radius:3px; font-size:9.5px; cursor:pointer; margin-left:6px;" title="Nhập/Sửa kèo">✏️</button>
+            </div>
+          </td>
+          <td style="text-align:center">
+            <div class="odds-meta-placeholder"></div>
+            ${scoreText}
+          </td>
+          <td>
+            <div class="odds-line-label">Kèo Chấp</div>
+            <span class="odds-tag tag-pending"><span class="full-name">Chưa cập nhật kèo</span><span class="short-code">Chưa kèo</span></span>
+          </td>
+          <td>
+            <div class="odds-line-label">Tài Xỉu</div>
+            <span class="odds-tag tag-pending"><span class="full-name">Chưa cập nhật kèo</span><span class="short-code">Chưa kèo</span></span>
+          </td>
+        </tr>`;
+    }
+
+    const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
+    const dogTeam = odds.favoriteId === m.team1.id ? m.team2 : m.team1;
+
+    // Hiển thị nguồn kèo (chỉ hiển thị nhãn AI khi là kèo tự động ước lượng)
+    const oddsSourceTag = odds.isReal
+      ? ""
+      : `<span class="odds-source-badge elo" title="Kèo ước lượng của AI">AI</span>`;
+
+    // HTML kèo chấp và tài xỉu
+    const hcapLabel = odds.handicap === 0
+      ? `<span class="full-name">Đồng banh ${oddsSourceTag}</span><span class="short-code">Đồng ${oddsSourceTag}</span>`
+      : `<span class="full-name">${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} ${favTeam.name} chấp ${odds.handicap} ${oddsSourceTag}</span>` +
+      `<span class="short-code">${favTeam.code} chấp ${odds.handicap} ${oddsSourceTag}</span>`;
+    const ouLabel = `<span class="full-name">Mốc ${odds.overUnder}</span><span class="short-code">Mốc ${odds.overUnder}</span>`;
+
+    let hcapClass = "";
+    let hcapText = "";
+    let ouClass = "";
+    let ouText = "";
+
+    if (m.status === "completed") {
+      const hRes = calcHandicapResult(m, odds);
+      const ouRes = calcOUResult(m, odds);
+
+      hcapClass = hRes === "fav_win" ? "tag-win" : hRes === "dog_win" ? "tag-lose" : "tag-push";
+      const hcapTextFull = hRes === "fav_win"
+        ? `✅ ${getFlagHtml(favTeam.emoji, favTeam.name, "normal")} Thắng kèo`
+        : hRes === "dog_win"
+          ? `❌ ${getFlagHtml(dogTeam.emoji, dogTeam.name, "normal")} Bất ngờ thắng`
+          : `⚖️ Hòa kèo`;
+      const hcapTextShort = hRes === "fav_win" ? `✅ Thắng` : hRes === "dog_win" ? `❌ Dưới` : `⚖️ Hòa`;
+      hcapText = `<span class="full-name">${hcapTextFull}</span><span class="short-code">${hcapTextShort}</span>`;
+
+      ouClass = ouRes?.result === "over" ? "tag-win" : ouRes?.result === "under" ? "tag-lose" : "tag-push";
+      const ouTextFull = ouRes?.result === "over"
+        ? `🔼 Tài (${ouRes.total} bàn)`
+        : ouRes?.result === "under"
+          ? `🔽 Xỉu (${ouRes.total} bàn)`
+          : `⚖️ Hòa (${ouRes.total} bàn)`;
+      const ouTextShort = ouRes?.result === "over"
+        ? `🔼 Tài (${ouRes.total})`
+        : ouRes?.result === "under"
+          ? `🔽 Xỉu (${ouRes.total})`
+          : `⚖️ Hòa (${ouRes.total})`;
+      ouText = `<span class="full-name">${ouTextFull}</span><span class="short-code">${ouTextShort}</span>`;
+    } else if (m.status === "live") {
+      hcapClass = "tag-live";
+      hcapText = `<span class="full-name">🔴 Đang trực tiếp</span><span class="short-code">🔴 Trực tiếp</span>`;
+      ouClass = "tag-live";
+      ouText = `<span class="full-name">🔴 Đang trực tiếp</span><span class="short-code">🔴 Trực tiếp</span>`;
+    } else {
+      hcapClass = "tag-pending";
+      hcapText = `<span class="full-name">Chờ thi đấu</span><span class="short-code">Chờ đấu</span>`;
+      ouClass = "tag-pending";
+      ouText = `<span class="full-name">Chờ thi đấu</span><span class="short-code">Chờ đấu</span>`;
+    }
+
     return `
       <tr>
         <td>
@@ -1152,12 +1206,12 @@ function renderOddsResults() {
             <span class="odds-flag-span">${getFlagHtml(m.team2.emoji, m.team2.name, "normal")}</span>
             <span class="full-name">${m.team2.name}</span>
             <span class="short-code">${m.team2.code}</span>
-            <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id})" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:1px 4px; border-radius:3px; font-size:9.5px; cursor:pointer; margin-left:6px;" title="Nhập/Sửa kèo">✏️</button>
+            <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:1px 4px; border-radius:3px; font-size:9.5px; cursor:pointer; margin-left:6px;" title="Nhập/Sửa kèo">✏️</button>
           </div>
         </td>
         <td style="text-align:center">
           <div class="odds-meta-placeholder"></div>
-          <div class="odds-score">${m.score1} - ${m.score2}</div>
+          ${scoreText}
         </td>
         <td>
           <div class="odds-line-label">${hcapLabel}</div>
@@ -1172,9 +1226,8 @@ function renderOddsResults() {
 
   tbody.innerHTML = rows;
 
-  // Summary bar
+  // Summary bar (chỉ tính cho các trận đã kết thúc)
   if (summaryBar) {
-    // Tính toán chênh lệch cao nhất trong lịch sử giải đấu (theo trình tự thời gian tăng dần)
     const chronoMatches = [...completed].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
     let runningFav = 0;
     let runningDog = 0;
@@ -1234,7 +1287,7 @@ function renderOddsResults() {
       </div>
       <div class="odds-stat-card odds-diff-card">
         <div class="odds-stat-val text-yellow">${maxHandicapDiff}</div>
-        <div class="odds-stat-label">Chênh lệch Kèo lớn nhất</div>
+        <div class="odds-stat-label">Chênh lệnh Kèo lớn nhất</div>
         <div class="odds-stat-sub">Hiện tại: ${hLeaderText}</div>
       </div>
       <div class="odds-stat-card odds-diff-card">
@@ -1331,11 +1384,26 @@ async function syncExternalOdds(apiKey) {
 // ──────────────────────────────────────────────
 // ĐIỀU KHIỂN POPUP CẤU HÌNH KÈO
 // ──────────────────────────────────────────────
-function toggleSettingsModal() {
+function toggleSettingsModal(event) {
   const modal = document.getElementById("settings-modal");
   if (!modal) return;
   const isHidden = modal.style.display === "none";
-  modal.style.display = isHidden ? "flex" : "none";
+  if (isHidden) {
+    let clickY = 150;
+    if (event) {
+      clickY = event.pageY || event.clientY;
+    } else if (window.event) {
+      clickY = window.event.pageY || window.event.clientY;
+    }
+    modal.style.position = "absolute";
+    modal.style.alignItems = "flex-start";
+    modal.style.justifyContent = "center";
+    modal.style.height = `${document.documentElement.scrollHeight || document.body.scrollHeight}px`;
+    modal.style.paddingTop = `${Math.max(20, clickY - 100)}px`;
+    modal.style.display = "flex";
+  } else {
+    modal.style.display = "none";
+  }
 }
 
 function saveSettings() {
@@ -1448,7 +1516,7 @@ function getTeamForm(teamId, beforeDateStr) {
 // ──────────────────────────────────────────────
 // CHỨC NĂNG NHẬP KÈO THỦ CÔNG
 // ──────────────────────────────────────────────
-function editManualOdds(matchId) {
+function editManualOdds(matchId, event) {
   const m = state.matches.find(match => match.id === matchId);
   if (!m) return;
 
@@ -1464,6 +1532,20 @@ function editManualOdds(matchId) {
     modal.style.display = "none";
     document.body.appendChild(modal);
   }
+
+  // Căn chỉnh vị trí của popup ngay trước mặt (nơi người dùng bấm chuột)
+  let clickY = 300;
+  if (event) {
+    clickY = event.pageY || event.clientY;
+  } else if (window.event) {
+    clickY = window.event.pageY || window.event.clientY;
+  }
+  
+  modal.style.position = "absolute";
+  modal.style.alignItems = "flex-start";
+  modal.style.justifyContent = "center";
+  modal.style.height = `${document.documentElement.scrollHeight || document.body.scrollHeight}px`;
+  modal.style.paddingTop = `${Math.max(20, clickY - 180)}px`;
 
   // Nội dung modal
   modal.innerHTML = `
