@@ -6,7 +6,13 @@ let state = {
   lastSync: null,
   syncSource: null,
   showAllUpcomingOdds: false,
-  isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:"
+  isLocal: window.location.protocol === "file:" ||
+           window.location.hostname === "localhost" ||
+           window.location.hostname === "127.0.0.1" ||
+           window.location.hostname.startsWith("192.168.") ||
+           window.location.hostname.startsWith("10.") ||
+           window.location.hostname.endsWith(".local") ||
+           (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname))
 };
 
 // ──────────────────────────────────────────────
@@ -121,6 +127,48 @@ function getMatchKey(m) {
   return `${teams.join("_")}_${stage}`;
 }
 
+async function loadManualOdds() {
+  state.manualOdds = {};
+  let loadedOdds = null;
+
+  if (state.isLocal) {
+    try {
+      const res = await fetch("manual_odds.json?t=" + new Date().getTime());
+      if (res.ok) {
+        loadedOdds = await res.json();
+      }
+    } catch (err) {
+      console.warn("Không thể tải manual_odds.json trực tiếp (CORS hoặc offline), dùng localStorage dự phòng:", err);
+    }
+  }
+
+  if (!loadedOdds) {
+    const saved = localStorage.getItem("wc2026_manual_odds");
+    if (saved) {
+      try {
+        loadedOdds = JSON.parse(saved);
+      } catch (e) {}
+    }
+  }
+
+  if (loadedOdds && typeof loadedOdds === "object") {
+    // Migrate old integer keys to new stable keys
+    Object.entries(loadedOdds).forEach(([key, val]) => {
+      const matchId = parseInt(key);
+      if (!isNaN(matchId)) {
+        const m = state.matches.find(match => match.id === matchId);
+        if (m) {
+          const stableKey = getMatchKey(m);
+          state.manualOdds[stableKey] = val;
+        }
+      } else {
+        state.manualOdds[key] = val;
+      }
+    });
+    localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+  }
+}
+
 // ──────────────────────────────────────────────
 // KHỞI ĐỘNG
 // ──────────────────────────────────────────────
@@ -128,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initApp();
 });
 
-function initApp() {
+async function initApp() {
   // Cập nhật thời gian hiển thị
   updateTimeBadge();
 
@@ -173,32 +221,8 @@ function initApp() {
     }
   }
 
-  const savedManualOdds = localStorage.getItem("wc2026_manual_odds");
-  if (savedManualOdds) {
-    try {
-      const parsed = JSON.parse(savedManualOdds);
-      state.manualOdds = {};
-
-      // Migrate old integer keys to new stable keys
-      Object.entries(parsed).forEach(([key, val]) => {
-        const matchId = parseInt(key);
-        if (!isNaN(matchId)) {
-          const m = state.matches.find(match => match.id === matchId);
-          if (m) {
-            const stableKey = getMatchKey(m);
-            state.manualOdds[stableKey] = val;
-          }
-        } else {
-          state.manualOdds[key] = val;
-        }
-      });
-      localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
-    } catch (e) {
-      state.manualOdds = {};
-    }
-  } else {
-    state.manualOdds = {};
-  }
+  // Tải tỷ lệ kèo từ manual_odds.json hoặc localStorage
+  await loadManualOdds();
 
   saveMatches();
   renderAll();
@@ -2208,6 +2232,9 @@ function saveManualOdds(matchId) {
   // Gửi tỷ lệ kèo mới lên server qua Streamlit
   StreamlitHelper.setValue(state.manualOdds);
 
+  // Gửi tỷ lệ kèo tới server local /api/save_odds
+  saveManualOddsToServer();
+
   closeManualOddsModal();
   renderAll();
   showToast("Đã cập nhật kèo thủ công thành công!", "success");
@@ -2224,8 +2251,33 @@ function clearManualOdds(matchId) {
 
     // Gửi tỷ lệ kèo mới lên server qua Streamlit (sau khi đã xóa)
     StreamlitHelper.setValue(state.manualOdds);
+
+    // Gửi tỷ lệ kèo tới server local /api/save_odds
+    saveManualOddsToServer();
   }
   closeManualOddsModal();
   renderAll();
   showToast("Đã xóa kèo thủ công, chuyển sang dùng tỷ lệ mặc định.", "info");
+}
+
+function saveManualOddsToServer() {
+  if (state.isLocal) {
+    fetch("/api/save_odds", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(state.manualOdds)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP error " + res.status);
+      return res.json();
+    })
+    .then(data => {
+      console.log("Đã ghi thành công vào file manual_odds.json:", data);
+    })
+    .catch(err => {
+      console.warn("Không thể lưu trực tiếp vào manual_odds.json qua API server local:", err);
+    });
+  }
 }

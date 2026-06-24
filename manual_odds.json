@@ -1,1 +1,42 @@
-{}
+{
+  "argentina_austria_group": {
+    "favoriteId": "argentina",
+    "handicap": 1.25,
+    "overUnder": 2.5
+  },
+  "france_iraq_group": {
+    "favoriteId": "france",
+    "handicap": 2.5,
+    "overUnder": 2.5
+  },
+  "norway_senegal_group": {
+    "favoriteId": "norway",
+    "handicap": 0.25,
+    "overUnder": 2.5
+  },
+  "algeria_jordan_group": {
+    "favoriteId": "algeria",
+    "handicap": 1,
+    "overUnder": 2.5
+  },
+  "portugal_uzbekistan_group": {
+    "favoriteId": "portugal",
+    "handicap": 2.25,
+    "overUnder": 2.5
+  },
+  "england_ghana_group": {
+    "favoriteId": "england",
+    "handicap": 2,
+    "overUnder": 2.5
+  },
+  "croatia_panama_group": {
+    "favoriteId": "croatia",
+    "handicap": 1.25,
+    "overUnder": 2.5
+  },
+  "colombia_dr_congo_group": {
+    "favoriteId": "colombia",
+    "handicap": 1,
+    "overUnder": 2.5
+  }
+}
