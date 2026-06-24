@@ -44,7 +44,7 @@ window.addEventListener("message", (event) => {
       if (args.server_manual_odds) {
         // Cập nhật state.manualOdds từ server
         state.manualOdds = args.server_manual_odds;
-        
+
         // Đồng thời lưu vào localStorage làm dự phòng
         localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
       }
@@ -178,7 +178,7 @@ function initApp() {
     try {
       const parsed = JSON.parse(savedManualOdds);
       state.manualOdds = {};
-      
+
       // Migrate old integer keys to new stable keys
       Object.entries(parsed).forEach(([key, val]) => {
         const matchId = parseInt(key);
@@ -202,7 +202,7 @@ function initApp() {
 
   saveMatches();
   renderAll();
-  
+
   // Báo cáo component đã sẵn sàng cho Streamlit
   StreamlitHelper.sendReady();
 
@@ -235,10 +235,10 @@ function renderAll() {
   renderMatches();
   renderStandings();
   renderKnockout();
-  
+
   const tabBtnOdds = document.getElementById("tab-btn-odds");
   const settingsBtn = document.getElementById("btn-toggle-settings");
-  
+
   if (state.isLocal) {
     if (tabBtnOdds) tabBtnOdds.style.display = "";
     if (settingsBtn) settingsBtn.style.display = "";
@@ -246,7 +246,7 @@ function renderAll() {
   } else {
     if (tabBtnOdds) tabBtnOdds.style.display = "none";
     if (settingsBtn) settingsBtn.style.display = "none";
-    
+
     // Nếu đang ở tab tỷ lệ kèo thì chuyển về tab lịch thi đấu
     const oddsTab = document.getElementById("odds-tab");
     if (oddsTab && oddsTab.classList.contains("active")) {
@@ -522,23 +522,23 @@ const BRACKET_TEMPLATE = [
   // Round of 32 (16 matches)
   [
     // Left Branch
-    { id: 74, label: "Trận 74", t1: "Nhất E", t2: "Ba A/B/C/D/F", fallbackDate: "30/06 03:30" },
+    { id: 74, label: "Trận 74", t1: "Đội tuyển Đức (Nhất E)", t2: "Ba A/B/C/D/F", fallbackDate: "30/06 03:30" },
     { id: 77, label: "Trận 77", t1: "Nhất I", t2: "Ba C/D/F/G/H", fallbackDate: "01/07 04:00" },
     { id: 73, label: "Trận 73", t1: "Nhì A", t2: "Nhì B", fallbackDate: "29/06 02:00" },
     { id: 75, label: "Trận 75", t1: "Nhất F", t2: "Nhì C", fallbackDate: "30/06 08:00" },
     { id: 76, label: "Trận 76", t1: "Nhất C", t2: "Nhì F", fallbackDate: "30/06 00:00" },
     { id: 78, label: "Trận 78", t1: "Nhì E", t2: "Nhì I", fallbackDate: "01/07 00:00" },
-    { id: 79, label: "Trận 79", t1: "Nhất A", t2: "Ba C/E/F/H/I", fallbackDate: "01/07 08:00" },
-    { id: 80, label: "Trận 80", t1: "Nhất L", t2: "Ba E/H/I/J/K", fallbackDate: "02/07 03:00" },
+    { id: 79, label: "Trận 79", t1: "Đội tuyển Mexico (Nhất A)", t2: "Ba C/E/F/H/I", fallbackDate: "01/07 08:00" },
+    { id: 80, label: "Trận 80", t1: "Nhất L", t2: "Ba E/H/I/J/K", fallbackDate: "01/07 23:00" },
     // Right Branch
-    { id: 83, label: "Trận 83", t1: "Nhì K", t2: "Nhì L", fallbackDate: "02/07 00:00" },
-    { id: 84, label: "Trận 84", t1: "Nhất H", t2: "Nhì J", fallbackDate: "02/07 04:00" },
-    { id: 81, label: "Trận 81", t1: "Nhất D", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 07:00" },
-    { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "01/07 23:00" },
-    { id: 86, label: "Trận 86", t1: "Nhất J", t2: "Nhì H", fallbackDate: "03/07 06:00" },
-    { id: 88, label: "Trận 88", t1: "Nhì D", t2: "Nhì G", fallbackDate: "03/07 02:00" },
-    { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "02/07 08:00" },
-    { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "03/07 10:00" }
+    { id: 83, label: "Trận 83", t1: "Nhì K", t2: "Nhì L", fallbackDate: "03/07 06:00" },
+    { id: 84, label: "Trận 84", t1: "Nhất H", t2: "Nhì J", fallbackDate: "03/07 02:00" },
+    { id: 81, label: "Trận 81", t1: "Đội tuyển Mỹ (Nhất D)", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 07:00" },
+    { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "02/07 03:00" },
+    { id: 86, label: "Trận 86", t1: "Đội tuyển Argentina (Nhất J)", t2: "Nhì H", fallbackDate: "04/07 05:00" },
+    { id: 88, label: "Trận 88", t1: "Nhất D", t2: "Nhì G", fallbackDate: "04/07 01:00" },
+    { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "03/07 10:00" },
+    { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "04/07 08:30" }
   ],
   // Round of 16 (8 matches)
   [
@@ -637,7 +637,7 @@ function resolveTeamRecursive(text, standings, bestThirds, depth = 0) {
     const loserTeam = getMatchWinnerOrLoser(matchId, "loser", standings, bestThirds, depth + 1);
     if (loserTeam) return loserTeam;
   }
-  
+
   // Tương thích với nhãn cũ "Thắng Tứ Kết / Bán Kết"
   const matchWinnerQF = text.match(/Thắng\s+Tứ\s+Kết\s+(\d+)/i);
   if (matchWinnerQF) {
@@ -646,7 +646,7 @@ function resolveTeamRecursive(text, standings, bestThirds, depth = 0) {
     const winnerTeam = getMatchWinnerOrLoser(matchId, "winner", standings, bestThirds, depth + 1);
     if (winnerTeam) return winnerTeam;
   }
-  
+
   const matchWinnerSF = text.match(/Thắng\s+Bán\s+Kết\s+(\d+)/i);
   if (matchWinnerSF) {
     const sfNum = parseInt(matchWinnerSF[1]);
@@ -654,13 +654,18 @@ function resolveTeamRecursive(text, standings, bestThirds, depth = 0) {
     const winnerTeam = getMatchWinnerOrLoser(matchId, "winner", standings, bestThirds, depth + 1);
     if (winnerTeam) return winnerTeam;
   }
-  
+
   const matchLoserSF = text.match(/Thua\s+Bán\s+Kết\s+(\d+)/i);
   if (matchLoserSF) {
     const sfNum = parseInt(matchLoserSF[1]);
     const matchId = sfNum === 1 ? 101 : 102;
     const loserTeam = getMatchWinnerOrLoser(matchId, "loser", standings, bestThirds, depth + 1);
     if (loserTeam) return loserTeam;
+  }
+
+  const staticTeam = TEAMS.find(t => text.toLowerCase().includes(t.name.toLowerCase()));
+  if (staticTeam) {
+    return { name: text, emoji: staticTeam.emoji };
   }
 
   return { name: text, emoji: "" };
@@ -685,7 +690,7 @@ function getMatchWinnerOrLoser(matchId, type, standings, bestThirds, depth) {
   if (resolvedT1.emoji && resolvedT2.emoji) {
     match = knockoutMatches.find(m => {
       return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
-             (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
+        (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
     });
   }
 
@@ -741,16 +746,16 @@ function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThird
       t2Name = matchFromState.team2.name;
       t2Emoji = matchFromState.team2.emoji || "";
     }
-    
+
     isLive = matchFromState.status === "live";
     isCompleted = matchFromState.status === "completed";
     matchTimeStr = matchFromState.date ? `${formatDate(matchFromState.date)} ${matchFromState.time}` : (templateNode.fallbackDate || "Chờ xác định");
-    
+
     const isReversed = matchFromState.team1.name === t2Name;
     if (isReversed) {
       if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score1 = matchFromState.score2;
       if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score2 = matchFromState.score1;
-      
+
       if (isCompleted) {
         if (matchFromState.score2 > matchFromState.score1) t1Winner = true;
         if (matchFromState.score1 > matchFromState.score2) t2Winner = true;
@@ -758,7 +763,7 @@ function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThird
     } else {
       if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score1 = matchFromState.score1;
       if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score2 = matchFromState.score2;
-      
+
       if (isCompleted) {
         if (matchFromState.score1 > matchFromState.score2) t1Winner = true;
         if (matchFromState.score2 > matchFromState.score1) t2Winner = true;
@@ -815,9 +820,9 @@ function renderKnockout() {
     const tA = a.team;
     const tB = b.team;
     return tB.pts !== tA.pts ? tB.pts - tA.pts :
-           tB.gd  !== tA.gd  ? tB.gd  - tA.gd  :
-           tB.gf  !== tA.gf  ? tB.gf  - tA.gf  :
-           tB.rating - tA.rating;
+      tB.gd !== tA.gd ? tB.gd - tA.gd :
+        tB.gf !== tA.gf ? tB.gf - tA.gf :
+          tB.rating - tA.rating;
   });
 
   const bestThirds = thirdPlacedTeams.slice(0, 8);
@@ -855,12 +860,12 @@ function renderKnockout() {
     const nodesHtml = col.template.map((node) => {
       const resolvedT1 = resolveTeamRecursive(node.t1, standings, bestThirds);
       const resolvedT2 = resolveTeamRecursive(node.t2, standings, bestThirds);
-      
+
       let match = null;
       if (resolvedT1.emoji && resolvedT2.emoji) {
         match = knockoutMatches.find(m => {
           return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
-                 (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
+            (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
         });
       }
       return buildBracketNodeHtml(node, match, standings, bestThirds);
@@ -888,10 +893,10 @@ function scrollBracket(dir) {
   const container = document.querySelector(".bracket-container");
   if (!container) return;
   const maxScroll = container.scrollWidth - container.clientWidth;
-  
+
   const buttons = document.querySelectorAll(".br-nav-btn");
   buttons.forEach(btn => btn.classList.remove("active"));
-  
+
   let targetBtn = null;
   if (dir === 'left') {
     container.scrollTo({ left: 0, behavior: 'smooth' });
@@ -911,17 +916,17 @@ function syncBracketNavActiveButton() {
   if (!container) return;
   const maxScroll = container.scrollWidth - container.clientWidth;
   if (maxScroll <= 0) return;
-  
+
   const scrollLeft = container.scrollLeft;
   const ratio = scrollLeft / maxScroll;
-  
+
   let activeIdx = 1;
   if (ratio < 0.3) {
     activeIdx = 0;
   } else if (ratio > 0.7) {
     activeIdx = 2;
   }
-  
+
   const buttons = document.querySelectorAll(".br-nav-btn");
   if (buttons.length === 3) {
     buttons.forEach((btn, idx) => {
@@ -1014,7 +1019,7 @@ async function syncOfficialData(showAlert = false) {
 
       parsedMatches = parseApiMatches(data.matches);
       if (parsedMatches.length === 0) throw new Error("Không tìm thấy trận đấu hợp lệ từ nguồn chính thức.");
-      
+
       dataLoaded = true;
       sourceUsed = "openfootball";
       sourceDesc = "Dữ liệu World Cup từ openfootball GitHub";
@@ -1231,7 +1236,7 @@ function parseSportsDbEvents(events) {
 
     const date = ev.dateEvent || "";
     const time = ev.strTime ? ev.strTime.substring(0, 5) : "18:00";
-    
+
     let roundNum = 1;
     if (date) {
       const day = parseInt(date.split("-")[2]) || 11;
@@ -1491,19 +1496,19 @@ function renderOddsResults() {
   // Hàm phụ vẽ từng hàng trận đấu
   function renderOddsRowHtml(m) {
     const odds = getMatchOdds(m);
-    
+
     const isGroupMatch = VALID_GROUPS.includes(m.group);
     const dateFormatted = formatDate(m.date);
     const dateShort = dateFormatted.substring(0, 5); // Bỏ năm
-    
+
     const metaTextFull = isGroupMatch
       ? `Bảng ${m.group} • L${m.round} • ${dateFormatted}`
       : `${m.group} • ${dateFormatted}`;
-      
+
     const metaTextShort = isGroupMatch
       ? `Bảng ${m.group} • L${m.round} • ${dateShort}`
       : `${m.group} • ${dateShort}`;
-      
+
     const metaText = `<span class="full-name">${metaTextFull}</span><span class="short-code">${metaTextShort}</span>`;
 
     // Hiển thị tỉ số hoặc trạng thái
@@ -1745,14 +1750,14 @@ function renderOddsResults() {
   if (roundSummaryContainer) {
     if (state.isLocal) {
       roundSummaryContainer.style.display = "block";
-      
+
       const rounds = [
         { key: "l1", label: "Lượt 1 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 1 || m.round === "1") },
         { key: "l2", label: "Lượt 2 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 2 || m.round === "2") },
         { key: "l3", label: "Lượt 3 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 3 || m.round === "3") },
         { key: "ko", label: "Vòng KO", filter: m => !VALID_GROUPS.includes(m.group) }
       ];
-      
+
       const summaryRows = [];
       let grandTotal = 0;
       let grandFavWins = 0;
@@ -1761,30 +1766,30 @@ function renderOddsResults() {
       let grandOvers = 0;
       let grandUnders = 0;
       let grandPushOU = 0;
-      
+
       rounds.forEach(r => {
         const roundMatches = completed.filter(r.filter);
         let total = 0;
         let favWins = 0, dogWins = 0, pushH = 0;
         let overs = 0, unders = 0, pushOU = 0;
-        
+
         roundMatches.forEach(m => {
           const odds = getMatchOdds(m);
           if (odds) {
             total++;
             const hRes = calcHandicapResult(m, odds);
             const ouRes = calcOUResult(m, odds);
-            
+
             if (hRes === "fav_win") favWins++;
             else if (hRes === "dog_win") dogWins++;
             else pushH++;
-            
+
             if (ouRes?.result === "over") overs++;
             else if (ouRes?.result === "under") unders++;
             else pushOU++;
           }
         });
-        
+
         grandTotal += total;
         grandFavWins += favWins;
         grandDogWins += dogWins;
@@ -1792,15 +1797,15 @@ function renderOddsResults() {
         grandOvers += overs;
         grandUnders += unders;
         grandPushOU += pushOU;
-        
+
         const hDiff = favWins - dogWins;
         const hDiffText = hDiff > 0 ? `<span class="text-green">Trên +${hDiff}</span>` : hDiff < 0 ? `<span class="text-pink">Dưới +${Math.abs(hDiff)}</span>` : `<span style="color:var(--text-muted)">0</span>`;
         const hPctText = total > 0 ? `${Math.round((favWins / total) * 100)}%` : "-";
-        
+
         const ouDiff = overs - unders;
         const ouDiffText = ouDiff > 0 ? `<span class="text-green">Tài +${ouDiff}</span>` : ouDiff < 0 ? `<span class="text-pink">Xỉu +${Math.abs(ouDiff)}</span>` : `<span style="color:var(--text-muted)">0</span>`;
         const ouPctText = total > 0 ? `${Math.round((overs / total) * 100)}%` : "-";
-        
+
         summaryRows.push(`
           <tr>
             <td style="font-weight:700; color:var(--accent-cyan);">${r.label}</td>
@@ -1814,15 +1819,15 @@ function renderOddsResults() {
           </tr>
         `);
       });
-      
+
       const totalHDiff = grandFavWins - grandDogWins;
       const totalHDiffText = totalHDiff > 0 ? `<span class="text-green">Trên +${totalHDiff}</span>` : totalHDiff < 0 ? `<span class="text-pink">Dưới +${Math.abs(totalHDiff)}</span>` : `0`;
       const totalHPctText = grandTotal > 0 ? `${Math.round((grandFavWins / grandTotal) * 100)}%` : "-";
-      
+
       const totalOUDiff = grandOvers - grandUnders;
       const totalOUDiffText = totalOUDiff > 0 ? `<span class="text-green">Tài +${totalOUDiff}</span>` : totalOUDiff < 0 ? `<span class="text-pink">Xỉu +${Math.abs(totalOUDiff)}</span>` : `0`;
       const totalOUPctText = grandTotal > 0 ? `${Math.round((grandOvers / grandTotal) * 100)}%` : "-";
-      
+
       roundSummaryContainer.innerHTML = `
         <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); padding:16px; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
           <h4 style="margin: 0 0 12px 0; font-size:13px; font-weight:800; color:var(--accent-cyan); display:flex; align-items:center; gap:6px;">
@@ -1867,7 +1872,7 @@ function renderOddsResults() {
 }
 
 // Hàm global hỗ trợ bấm nút thu gọn/mở rộng trận sắp diễn ra
-window.toggleUpcomingOdds = function(showAll) {
+window.toggleUpcomingOdds = function (showAll) {
   state.showAllUpcomingOdds = showAll;
   renderOddsResults();
 };
@@ -2113,7 +2118,7 @@ function editManualOdds(matchId, event) {
   } else if (window.event) {
     clickY = window.event.pageY || window.event.clientY;
   }
-  
+
   modal.style.position = "absolute";
   modal.style.alignItems = "flex-start";
   modal.style.justifyContent = "center";
@@ -2201,7 +2206,7 @@ function saveManualOdds(matchId) {
   state.manualOdds[key] = { favoriteId, handicap, overUnder };
 
   localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
-  
+
   // Gửi tỷ lệ kèo mới lên server qua Streamlit
   StreamlitHelper.setValue(state.manualOdds);
 
@@ -2218,7 +2223,7 @@ function clearManualOdds(matchId) {
   if (state.manualOdds && state.manualOdds[key]) {
     delete state.manualOdds[key];
     localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
-    
+
     // Gửi tỷ lệ kèo mới lên server qua Streamlit (sau khi đã xóa)
     StreamlitHelper.setValue(state.manualOdds);
   }
