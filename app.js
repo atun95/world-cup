@@ -41,9 +41,6 @@ window.addEventListener("message", (event) => {
   if (event.data && event.data.type === "streamlit:render") {
     const args = event.data.args;
     if (args) {
-      if (args.hasOwnProperty("is_local")) {
-        state.isLocal = args.is_local;
-      }
       if (args.server_manual_odds) {
         // Cập nhật state.manualOdds từ server
         state.manualOdds = args.server_manual_odds;
