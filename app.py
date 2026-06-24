@@ -53,17 +53,27 @@ if os.path.exists(odds_file):
 else:
     server_manual_odds = {}
 
-# 5. Gọi component và truyền dữ liệu tỷ lệ kèo từ server xuống frontend
+# 5. Xác định môi trường chạy (local vs deploy)
+# Coi là local nếu chạy trên Windows (nt), không tồn tại thư mục cloud (/app, /mount/src),
+# và không có biến môi trường Streamlit Cloud đặc trưng.
+is_local = (
+    os.name == 'nt' or 
+    not (os.path.exists('/app') or os.path.exists('/mount/src')) or
+    "STREAMLIT_SHARING_API_KEY" not in os.environ
+)
+
+# 6. Gọi component và truyền dữ liệu tỷ lệ kèo từ server xuống frontend
 try:
     # Chiều cao ban đầu đặt tạm 1600, script bên Javascript sẽ tự động gửi chiều cao thực tế để kéo giãn iframe.
     new_manual_odds = world_cup_tracker(
         server_manual_odds=server_manual_odds, 
+        is_local=is_local,
         key="wc_tracker_comp", 
         height=1600
     )
     
-    # 6. Nếu người dùng nhập kèo mới từ giao diện, lưu vào file trên server và tải lại trang để đồng bộ
-    if new_manual_odds is not None:
+    # 7. Nếu người dùng nhập kèo mới từ giao diện, lưu vào file trên server và tải lại trang để đồng bộ (chỉ chạy ở local)
+    if is_local and new_manual_odds is not None:
         # Kiểm tra xem dữ liệu trả về có hợp lệ không và có khác với dữ liệu hiện tại trên server không
         if isinstance(new_manual_odds, dict) and new_manual_odds != server_manual_odds:
             with open(odds_file, "w", encoding="utf-8") as f:

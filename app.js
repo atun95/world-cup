@@ -1,7 +1,7 @@
 // app.js – World Cup 2026 Results Tracker
 // Chỉ theo dõi kết quả thực tế, không có tính năng cá cược
 
-let state = { matches: [], lastSync: null, syncSource: null, showAllUpcomingOdds: false };
+let state = { matches: [], lastSync: null, syncSource: null, showAllUpcomingOdds: false, isLocal: true };
 
 // ──────────────────────────────────────────────
 // HỖ TRỢ GIAO TIẾP VỚI STREAMLIT COMPONENT (2 CHIỀU)
@@ -34,13 +34,17 @@ const StreamlitHelper = {
 window.addEventListener("message", (event) => {
   if (event.data && event.data.type === "streamlit:render") {
     const args = event.data.args;
-    if (args && args.server_manual_odds) {
-      // Cập nhật state.manualOdds từ server
-      state.manualOdds = args.server_manual_odds;
-      
-      // Đồng thời lưu vào localStorage làm dự phòng
-      localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
-      
+    if (args) {
+      if (args.hasOwnProperty("is_local")) {
+        state.isLocal = args.is_local;
+      }
+      if (args.server_manual_odds) {
+        // Cập nhật state.manualOdds từ server
+        state.manualOdds = args.server_manual_odds;
+        
+        // Đồng thời lưu vào localStorage làm dự phòng
+        localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+      }
       // Vẽ lại giao diện
       renderAll();
     }
@@ -225,7 +229,25 @@ function renderAll() {
   renderMatches();
   renderStandings();
   renderKnockout();
-  renderOddsResults();
+  
+  const tabBtnOdds = document.getElementById("tab-btn-odds");
+  const settingsBtn = document.getElementById("btn-toggle-settings");
+  
+  if (state.isLocal) {
+    if (tabBtnOdds) tabBtnOdds.style.display = "";
+    if (settingsBtn) settingsBtn.style.display = "";
+    renderOddsResults();
+  } else {
+    if (tabBtnOdds) tabBtnOdds.style.display = "none";
+    if (settingsBtn) settingsBtn.style.display = "none";
+    
+    // Nếu đang ở tab tỷ lệ kèo thì chuyển về tab lịch thi đấu
+    const oddsTab = document.getElementById("odds-tab");
+    if (oddsTab && oddsTab.classList.contains("active")) {
+      const firstTabBtn = document.querySelector(".tab-btn");
+      switchTab("matches-tab", firstTabBtn);
+    }
+  }
 }
 
 function updateTimeBadge() {
@@ -384,13 +406,13 @@ function buildMatchCard(m) {
     oddsHtml = `
       <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
         <span style="font-size:11px;">⚖️ <strong>Chấp:</strong> ${handicapText} &nbsp; 🔥 <strong>T/X:</strong> ${odds.overUnder}</span>
-        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>
+        ${state.isLocal ? `<button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>` : ''}
       </div>`;
   } else {
     oddsHtml = `
       <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
         <span style="font-size:11px; color:var(--text-muted);">⚖️ Chưa cập nhật kèo</span>
-        <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>
+        ${state.isLocal ? `<button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>` : ''}
       </div>`;
   }
 
