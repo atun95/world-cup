@@ -54,13 +54,12 @@ else:
     server_manual_odds = {}
 
 # 5. Xác định môi trường chạy (local vs deploy)
-# Coi là local nếu chạy trên Windows (nt), không tồn tại thư mục cloud (/app, /mount/src),
-# và không có biến môi trường Streamlit Cloud đặc trưng.
-is_local = (
-    os.name == 'nt' or 
-    not (os.path.exists('/app') or os.path.exists('/mount/src')) or
-    "STREAMLIT_SHARING_API_KEY" not in os.environ
+is_deployed = (
+    os.path.exists('/app') or 
+    os.path.exists('/mount/src') or 
+    "STREAMLIT_SHARING_API_KEY" in os.environ
 )
+is_local = not is_deployed
 
 # 6. Gọi component và truyền dữ liệu tỷ lệ kèo từ server xuống frontend
 try:

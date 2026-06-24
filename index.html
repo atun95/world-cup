@@ -34,7 +34,7 @@
 
       <div class="header-right">
         <div class="time-badge" id="current-time-badge">📅 --/--/2026</div>
-        <button class="settings-btn" id="btn-toggle-settings" onclick="toggleSettingsModal(event)"
+        <button class="settings-btn" id="btn-toggle-settings" style="display: none;" onclick="toggleSettingsModal(event)"
           title="Cấu hình API Kèo Nhà Cái">
           ⚙️
         </button>
@@ -91,7 +91,7 @@
       <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('matches-tab', this)">⚽ Lịch &amp; Kết Quả</button>
         <button class="tab-btn" onclick="switchTab('standings-tab', this)">📊 Bảng Xếp Hạng</button>
-        <button class="tab-btn" id="tab-btn-odds" onclick="switchTab('odds-tab', this)">📈 Kết Quả Kèo</button>
+        <button class="tab-btn" id="tab-btn-odds" style="display: none;" onclick="switchTab('odds-tab', this)">📈 Kết Quả Kèo</button>
         <button class="tab-btn" onclick="switchTab('knockout-tab', this)">🏆 Vòng KO</button>
       </div>
 

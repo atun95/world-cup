@@ -404,25 +404,23 @@ function buildMatchCard(m) {
   const odds = getMatchOdds(m);
 
   let oddsHtml = "";
-  if (odds) {
-    const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
-    const handicapText = odds.handicap === 0
-      ? "Đồng banh"
-      : `${favTeam.name} chấp ${odds.handicap}`;
-    oddsHtml = `
-      <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
-        <span style="font-size:11px;">⚖️ <strong>Chấp:</strong> ${handicapText} &nbsp; 🔥 <strong>T/X:</strong> ${odds.overUnder}</span>
-        ${state.isLocal ? `<button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>` : ''}
-      </div>`;
-  } else {
-    if (state.isLocal) {
+  if (state.isLocal) {
+    if (odds) {
+      const favTeam = odds.favoriteId === m.team1.id ? m.team1 : m.team2;
+      const handicapText = odds.handicap === 0
+        ? "Đồng banh"
+        : `${favTeam.name} chấp ${odds.handicap}`;
+      oddsHtml = `
+        <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
+          <span style="font-size:11px;">⚖️ <strong>Chấp:</strong> ${handicapText} &nbsp; 🔥 <strong>T/X:</strong> ${odds.overUnder}</span>
+          <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Sửa</button>
+        </div>`;
+    } else {
       oddsHtml = `
         <div class="match-odds-bar" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 12px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,255,255,0.05);">
           <span style="font-size:11px; color:var(--text-muted);">⚖️ Chưa cập nhật kèo</span>
           <button class="btn-edit-odds" onclick="event.stopPropagation(); editManualOdds(${m.id}, event)" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e4e4e7; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; transition: all 0.2s;">✏️ Nhập</button>
         </div>`;
-    } else {
-      oddsHtml = "";
     }
   }
 
