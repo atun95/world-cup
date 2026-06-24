@@ -518,50 +518,58 @@ function renderStandings() {
 const BRACKET_TEMPLATE = [
   // Round of 32 (16 matches)
   [
-    { id: 1, label: "Trận 1", t1: "Nhì A", t2: "Nhì B" },
-    { id: 2, label: "Trận 2", t1: "Nhất C", t2: "Nhì F" },
-    { id: 3, label: "Trận 3", t1: "Nhất A", t2: "Ba C/D/E/F" },
-    { id: 4, label: "Trận 4", t1: "Nhất F", t2: "Nhì C" },
-    { id: 5, label: "Trận 5", t1: "Nhì E", t2: "Nhì I" },
-    { id: 6, label: "Trận 6", t1: "Nhất I", t2: "Ba C/D/F/G/H" },
-    { id: 7, label: "Trận 7", t1: "Nhất E", t2: "Ba C/E/F/H/I" },
-    { id: 8, label: "Trận 8", t1: "Nhất L", t2: "Ba E/H/I/J/K" },
-    { id: 9, label: "Trận 9", t1: "Nhất G", t2: "Ba A/E/H/I/J" },
-    { id: 10, label: "Trận 10", t1: "Nhất D", t2: "Ba B/E/F/I/J" },
-    { id: 11, label: "Trận 11", t1: "Nhất H", t2: "Nhì J" },
-    { id: 12, label: "Trận 12", t1: "Nhì K", t2: "Nhì L" },
-    { id: 13, label: "Trận 13", t1: "Nhất B", t2: "Ba E/F/G/I/J" },
-    { id: 14, label: "Trận 14", t1: "Nhì D", t2: "Nhì G" },
-    { id: 15, label: "Trận 15", t1: "Nhất J", t2: "Nhì H" },
-    { id: 16, label: "Trận 16", t1: "Nhất K", t2: "Ba D/E/I/J/L" }
+    // Left Branch
+    { id: 74, label: "Trận 74", t1: "Nhất E", t2: "Ba A/B/C/D/F", fallbackDate: "30/06 05:00" },
+    { id: 77, label: "Trận 77", t1: "Nhất I", t2: "Ba C/D/F/G/H", fallbackDate: "01/07 06:00" },
+    { id: 73, label: "Trận 73", t1: "Nhì A", t2: "Nhì B", fallbackDate: "29/06 08:00" },
+    { id: 75, label: "Trận 75", t1: "Nhất F", t2: "Nhì C", fallbackDate: "30/06 08:00" },
+    { id: 76, label: "Trận 76", t1: "Nhất C", t2: "Nhì F", fallbackDate: "30/06 08:00" },
+    { id: 78, label: "Trận 78", t1: "Nhì E", t2: "Nhì I", fallbackDate: "01/07 08:00" },
+    { id: 79, label: "Trận 79", t1: "Nhất A", t2: "Ba C/E/F/H/I", fallbackDate: "01/07 08:00" },
+    { id: 80, label: "Trận 80", t1: "Nhất L", t2: "Ba E/H/I/J/K", fallbackDate: "02/07 05:00" },
+    // Right Branch
+    { id: 83, label: "Trận 83", t1: "Nhì K", t2: "Nhì L", fallbackDate: "03/07 05:00" },
+    { id: 84, label: "Trận 84", t1: "Nhất H", t2: "Nhì J", fallbackDate: "03/07 08:00" },
+    { id: 81, label: "Trận 81", t1: "Nhất D", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 08:00" },
+    { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "02/07 08:00" },
+    { id: 86, label: "Trận 86", t1: "Nhất J", t2: "Nhì H", fallbackDate: "04/07 05:00" },
+    { id: 88, label: "Trận 88", t1: "Nhì D", t2: "Nhì G", fallbackDate: "04/07 08:00" },
+    { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "03/07 08:00" },
+    { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "04/07 08:00" }
   ],
   // Round of 16 (8 matches)
   [
-    { id: 17, label: "Trận 17", t1: "Thắng Trận 1", t2: "Thắng Trận 2" },
-    { id: 18, label: "Trận 18", t1: "Thắng Trận 3", t2: "Thắng Trận 4" },
-    { id: 19, label: "Trận 19", t1: "Thắng Trận 5", t2: "Thắng Trận 6" },
-    { id: 20, label: "Trận 20", t1: "Thắng Trận 7", t2: "Thắng Trận 8" },
-    { id: 21, label: "Trận 21", t1: "Thắng Trận 9", t2: "Thắng Trận 10" },
-    { id: 22, label: "Trận 22", t1: "Thắng Trận 11", t2: "Thắng Trận 12" },
-    { id: 23, label: "Trận 23", t1: "Thắng Trận 13", t2: "Thắng Trận 14" },
-    { id: 24, label: "Trận 24", t1: "Thắng Trận 15", t2: "Thắng Trận 16" }
+    // Left Branch
+    { id: 89, label: "Trận 89", t1: "Thắng Trận 74", t2: "Thắng Trận 77", fallbackDate: "05/07 03:00" },
+    { id: 90, label: "Trận 90", t1: "Thắng Trận 73", t2: "Thắng Trận 75", fallbackDate: "05/07 08:00" },
+    { id: 91, label: "Trận 91", t1: "Thắng Trận 76", t2: "Thắng Trận 78", fallbackDate: "06/07 03:00" },
+    { id: 92, label: "Trận 92", t1: "Thắng Trận 79", t2: "Thắng Trận 80", fallbackDate: "06/07 08:00" },
+    // Right Branch
+    { id: 93, label: "Trận 93", t1: "Thắng Trận 83", t2: "Thắng Trận 84", fallbackDate: "07/07 04:00" },
+    { id: 94, label: "Trận 94", t1: "Thắng Trận 81", t2: "Thắng Trận 82", fallbackDate: "07/07 08:00" },
+    { id: 95, label: "Trận 95", t1: "Thắng Trận 86", t2: "Thắng Trận 88", fallbackDate: "08/07 05:00" },
+    { id: 96, label: "Trận 96", t1: "Thắng Trận 85", t2: "Thắng Trận 87", fallbackDate: "08/07 08:00" }
   ],
   // Quarter-finals (4 matches)
   [
-    { id: 25, label: "Tứ Kết 1", t1: "Thắng Trận 17", t2: "Thắng Trận 18" },
-    { id: 26, label: "Tứ Kết 2", t1: "Thắng Trận 19", t2: "Thắng Trận 20" },
-    { id: 27, label: "Tứ Kết 3", t1: "Thắng Trận 21", t2: "Thắng Trận 22" },
-    { id: 28, label: "Tứ Kết 4", t1: "Thắng Trận 23", t2: "Thắng Trận 24" }
+    // Left Branch
+    { id: 97, label: "Tứ Kết 1 (T97)", t1: "Thắng Trận 89", t2: "Thắng Trận 90", fallbackDate: "10/07 05:00" },
+    { id: 99, label: "Tứ Kết 3 (T99)", t1: "Thắng Trận 91", t2: "Thắng Trận 92", fallbackDate: "11/07 08:00" },
+    // Right Branch
+    { id: 98, label: "Tứ Kết 2 (T98)", t1: "Thắng Trận 93", t2: "Thắng Trận 94", fallbackDate: "11/07 05:00" },
+    { id: 100, label: "Tứ Kết 4 (T100)", t1: "Thắng Trận 95", t2: "Thắng Trận 96", fallbackDate: "12/07 05:00" }
   ],
   // Semi-finals (2 matches)
   [
-    { id: 29, label: "Bán Kết 1", t1: "Thắng Tứ Kết 1", t2: "Thắng Tứ Kết 2" },
-    { id: 30, label: "Bán Kết 2", t1: "Thắng Tứ Kết 3", t2: "Thắng Tứ Kết 4" }
+    // Left Branch
+    { id: 101, label: "Bán Kết 1 (T101)", t1: "Thắng Tứ Kết 1", t2: "Thắng Tứ Kết 3", fallbackDate: "15/07 07:00" },
+    // Right Branch
+    { id: 102, label: "Bán Kết 2 (T102)", t1: "Thắng Tứ Kết 2", t2: "Thắng Tứ Kết 4", fallbackDate: "16/07 07:00" }
   ],
   // Final & 3rd Place (2 matches)
   [
-    { id: 31, label: "Chung Kết", t1: "Thắng Bán Kết 1", t2: "Thắng Bán Kết 2" },
-    { id: 32, label: "Tranh Hạng 3", t1: "Thua Bán Kết 1", t2: "Thua Bán Kết 2" }
+    { id: 104, label: "Chung Kết (T104)", t1: "Thắng Bán Kết 1", t2: "Thắng Bán Kết 2", fallbackDate: "20/07 03:00" },
+    { id: 103, label: "Tranh Hạng 3 (T103)", t1: "Thua Bán Kết 1", t2: "Thua Bán Kết 2", fallbackDate: "19/07 03:00" }
   ]
 ];
 
@@ -581,8 +589,9 @@ function isPlaceholderTeam(name) {
   return isPlaceholder(name) || name.startsWith("Nhất ") || name.startsWith("Nhì ") || name.startsWith("Ba ") || name.startsWith("Thắng ") || name.startsWith("Thua ");
 }
 
-// Giải mã các chuỗi đại diện (placeholder) như "Nhất A", "Nhì B" thành tên đội tuyển thật và emoji cờ dựa trên BXH hiện tại (giữ nguyên đội hạng 3 là "Ba C/D/E/F" v.v.)
-function resolveTeamNameAndEmoji(text, standings, bestThirds) {
+// Hàm đệ quy phân giải tên đội tuyển và emoji cờ từ standings hoặc từ các vòng đấu trước
+function resolveTeamRecursive(text, standings, bestThirds, depth = 0) {
+  if (depth > 5) return { name: "Chờ xác định", emoji: "" };
   if (!text) return { name: "Chờ xác định", emoji: "" };
 
   // 1. Nhất bảng
@@ -590,9 +599,7 @@ function resolveTeamNameAndEmoji(text, standings, bestThirds) {
   if (matchFirst) {
     const group = matchFirst[1].toUpperCase();
     const team = standings[group] ? standings[group][0] : null;
-    if (team) {
-      return { name: team.name, emoji: team.emoji };
-    }
+    if (team) return { name: team.name, emoji: team.emoji };
   }
 
   // 2. Nhì bảng
@@ -600,13 +607,106 @@ function resolveTeamNameAndEmoji(text, standings, bestThirds) {
   if (matchSecond) {
     const group = matchSecond[1].toUpperCase();
     const team = standings[group] ? standings[group][1] : null;
-    if (team) {
-      return { name: team.name, emoji: team.emoji };
+    if (team) return { name: team.name, emoji: team.emoji };
+  }
+
+  // 3. Đội hạng 3 tốt nhất
+  if (text.startsWith("Ba ")) {
+    const groupsStr = text.substring(3);
+    const allowedGroups = groupsStr.split("/");
+    const found = bestThirds.find(bt => allowedGroups.includes(bt.group));
+    if (found && found.team) {
+      return { name: found.team.name, emoji: found.team.emoji };
     }
   }
 
-  // 3. Các trường hợp khác ("Ba C/D/E/F", "Thắng Trận 1", "Chung Kết", v.v.)
+  // 4. Thắng trận / Thua trận
+  const matchWinner = text.match(/Thắng\s+Trận\s+(\d+)/i);
+  if (matchWinner) {
+    const matchId = parseInt(matchWinner[1]);
+    const winnerTeam = getMatchWinnerOrLoser(matchId, "winner", standings, bestThirds, depth + 1);
+    if (winnerTeam) return winnerTeam;
+  }
+
+  const matchLoser = text.match(/Thua\s+Trận\s+(\d+)/i);
+  if (matchLoser) {
+    const matchId = parseInt(matchLoser[1]);
+    const loserTeam = getMatchWinnerOrLoser(matchId, "loser", standings, bestThirds, depth + 1);
+    if (loserTeam) return loserTeam;
+  }
+  
+  // Tương thích với nhãn cũ "Thắng Tứ Kết / Bán Kết"
+  const matchWinnerQF = text.match(/Thắng\s+Tứ\s+Kết\s+(\d+)/i);
+  if (matchWinnerQF) {
+    const qfNum = parseInt(matchWinnerQF[1]);
+    const matchId = qfNum === 1 ? 97 : qfNum === 2 ? 98 : qfNum === 3 ? 99 : 100;
+    const winnerTeam = getMatchWinnerOrLoser(matchId, "winner", standings, bestThirds, depth + 1);
+    if (winnerTeam) return winnerTeam;
+  }
+  
+  const matchWinnerSF = text.match(/Thắng\s+Bán\s+Kết\s+(\d+)/i);
+  if (matchWinnerSF) {
+    const sfNum = parseInt(matchWinnerSF[1]);
+    const matchId = sfNum === 1 ? 101 : 102;
+    const winnerTeam = getMatchWinnerOrLoser(matchId, "winner", standings, bestThirds, depth + 1);
+    if (winnerTeam) return winnerTeam;
+  }
+  
+  const matchLoserSF = text.match(/Thua\s+Bán\s+Kết\s+(\d+)/i);
+  if (matchLoserSF) {
+    const sfNum = parseInt(matchLoserSF[1]);
+    const matchId = sfNum === 1 ? 101 : 102;
+    const loserTeam = getMatchWinnerOrLoser(matchId, "loser", standings, bestThirds, depth + 1);
+    if (loserTeam) return loserTeam;
+  }
+
   return { name: text, emoji: "" };
+}
+
+function getMatchWinnerOrLoser(matchId, type, standings, bestThirds, depth) {
+  let foundNode = null;
+  for (let r = 0; r < BRACKET_TEMPLATE.length; r++) {
+    const node = BRACKET_TEMPLATE[r].find(n => n.id === matchId);
+    if (node) {
+      foundNode = node;
+      break;
+    }
+  }
+  if (!foundNode) return null;
+
+  const resolvedT1 = resolveTeamRecursive(foundNode.t1, standings, bestThirds, depth);
+  const resolvedT2 = resolveTeamRecursive(foundNode.t2, standings, bestThirds, depth);
+
+  const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
+  let match = null;
+  if (resolvedT1.emoji && resolvedT2.emoji) {
+    match = knockoutMatches.find(m => {
+      return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
+             (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
+    });
+  }
+
+  if (match && match.status === "completed") {
+    let winner = null;
+    let loser = null;
+    if (match.score1 > match.score2) {
+      winner = match.team1;
+      loser = match.team2;
+    } else if (match.score2 > match.score1) {
+      winner = match.team2;
+      loser = match.team1;
+    } else {
+      winner = match.team1;
+      loser = match.team2;
+    }
+    return type === "winner" ? winner : loser;
+  }
+  return null;
+}
+
+// Giữ lại hàm cũ để tránh lỗi tương thích nếu có hàm khác gọi
+function resolveTeamNameAndEmoji(text, standings, bestThirds) {
+  return resolveTeamRecursive(text, standings, bestThirds);
 }
 
 function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThirds) {
@@ -618,20 +718,18 @@ function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThird
   let score2 = "-";
   let isLive = false;
   let isCompleted = false;
-  let matchTimeStr = "Chờ xác định";
+  let matchTimeStr = templateNode.fallbackDate || "Chờ xác định";
   let t1Winner = false;
   let t2Winner = false;
 
-  // Lấy tên và cờ mặc định sau khi đã giải mã từ BXH vòng bảng
-  const resolvedT1 = resolveTeamNameAndEmoji(templateNode.t1, standings, bestThirds);
-  const resolvedT2 = resolveTeamNameAndEmoji(templateNode.t2, standings, bestThirds);
+  const resolvedT1 = resolveTeamRecursive(templateNode.t1, standings, bestThirds);
+  const resolvedT2 = resolveTeamRecursive(templateNode.t2, standings, bestThirds);
   t1Name = resolvedT1.name;
   t1Emoji = resolvedT1.emoji;
   t2Name = resolvedT2.name;
   t2Emoji = resolvedT2.emoji;
 
   if (matchFromState) {
-    // Nếu trận đấu thực tế đã có trong trạng thái, ưu tiên dùng thông tin thật nếu tên đội không phải placeholder
     if (matchFromState.team1 && !isPlaceholderTeam(matchFromState.team1.name)) {
       t1Name = matchFromState.team1.name;
       t1Emoji = matchFromState.team1.emoji || "";
@@ -641,16 +739,27 @@ function buildBracketNodeHtml(templateNode, matchFromState, standings, bestThird
       t2Emoji = matchFromState.team2.emoji || "";
     }
     
-    if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score1 = matchFromState.score1;
-    if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score2 = matchFromState.score2;
-    
     isLive = matchFromState.status === "live";
     isCompleted = matchFromState.status === "completed";
-    matchTimeStr = matchFromState.date ? `${formatDate(matchFromState.date)} ${matchFromState.time}` : "Chờ xác định";
+    matchTimeStr = matchFromState.date ? `${formatDate(matchFromState.date)} ${matchFromState.time}` : (templateNode.fallbackDate || "Chờ xác định");
     
-    if (isCompleted) {
-      if (matchFromState.score1 > matchFromState.score2) t1Winner = true;
-      if (matchFromState.score2 > matchFromState.score1) t2Winner = true;
+    const isReversed = matchFromState.team1.name === t2Name;
+    if (isReversed) {
+      if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score1 = matchFromState.score2;
+      if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score2 = matchFromState.score1;
+      
+      if (isCompleted) {
+        if (matchFromState.score2 > matchFromState.score1) t1Winner = true;
+        if (matchFromState.score1 > matchFromState.score2) t2Winner = true;
+      }
+    } else {
+      if (matchFromState.score1 !== null && matchFromState.score1 !== undefined) score1 = matchFromState.score1;
+      if (matchFromState.score2 !== null && matchFromState.score2 !== undefined) score2 = matchFromState.score2;
+      
+      if (isCompleted) {
+        if (matchFromState.score1 > matchFromState.score2) t1Winner = true;
+        if (matchFromState.score2 > matchFromState.score1) t2Winner = true;
+      }
     }
   }
 
@@ -714,29 +823,17 @@ function renderKnockout() {
 
   const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
 
-  const stateRounds = [[], [], [], [], []];
-  knockoutMatches.forEach(m => {
-    const rIdx = getBracketRoundIndex(m);
-    if (rIdx >= 0 && rIdx < 5) {
-      stateRounds[rIdx].push(m);
-    }
-  });
-
-  stateRounds.forEach(arr => {
-    arr.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
-  });
-
   // Chia đôi nhánh đấu (Trái và Phải) gặp nhau ở giữa (Chung kết)
   const cols = [
-    { title: "VÒNG 32 ĐỘI (TRÁI)", template: BRACKET_TEMPLATE[0].slice(0, 8), matches: stateRounds[0].slice(0, 8) },
-    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(0, 4), matches: stateRounds[1].slice(0, 4) },
-    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(0, 2), matches: stateRounds[2].slice(0, 2) },
-    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(0, 1), matches: stateRounds[3].slice(0, 1) },
-    { title: "CHUNG KẾT & HẠNG 3", template: BRACKET_TEMPLATE[4], matches: stateRounds[4] },
-    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(1, 2), matches: stateRounds[3].slice(1, 2) },
-    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(2, 4), matches: stateRounds[2].slice(2, 4) },
-    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(4, 8), matches: stateRounds[1].slice(4, 8) },
-    { title: "VÒNG 32 ĐỘI (PHẢI)", template: BRACKET_TEMPLATE[0].slice(8, 16), matches: stateRounds[0].slice(8, 16) }
+    { title: "VÒNG 32 ĐỘI (TRÁI)", template: BRACKET_TEMPLATE[0].slice(0, 8) },
+    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(0, 4) },
+    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(0, 2) },
+    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(0, 1) },
+    { title: "CHUNG KẾT & HẠNG 3", template: BRACKET_TEMPLATE[4] },
+    { title: "BÁN KẾT", template: BRACKET_TEMPLATE[3].slice(1, 2) },
+    { title: "TỨ KẾT", template: BRACKET_TEMPLATE[2].slice(2, 4) },
+    { title: "VÒNG 16 ĐỘI", template: BRACKET_TEMPLATE[1].slice(4, 8) },
+    { title: "VÒNG 32 ĐỘI (PHẢI)", template: BRACKET_TEMPLATE[0].slice(8, 16) }
   ];
 
   let html = `
@@ -752,8 +849,17 @@ function renderKnockout() {
   `;
 
   cols.forEach(col => {
-    const nodesHtml = col.template.map((node, nodeIdx) => {
-      const match = col.matches[nodeIdx] || null;
+    const nodesHtml = col.template.map((node) => {
+      const resolvedT1 = resolveTeamRecursive(node.t1, standings, bestThirds);
+      const resolvedT2 = resolveTeamRecursive(node.t2, standings, bestThirds);
+      
+      let match = null;
+      if (resolvedT1.emoji && resolvedT2.emoji) {
+        match = knockoutMatches.find(m => {
+          return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
+                 (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
+        });
+      }
       return buildBracketNodeHtml(node, match, standings, bestThirds);
     }).join("");
 
