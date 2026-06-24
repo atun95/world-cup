@@ -1,7 +1,13 @@
 // app.js – World Cup 2026 Results Tracker
 // Chỉ theo dõi kết quả thực tế, không có tính năng cá cược
 
-let state = { matches: [], lastSync: null, syncSource: null, showAllUpcomingOdds: false, isLocal: true };
+let state = {
+  matches: [],
+  lastSync: null,
+  syncSource: null,
+  showAllUpcomingOdds: false,
+  isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+};
 
 // ──────────────────────────────────────────────
 // HỖ TRỢ GIAO TIẾP VỚI STREAMLIT COMPONENT (2 CHIỀU)
