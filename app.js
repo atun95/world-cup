@@ -6,7 +6,7 @@ let state = {
   lastSync: null,
   syncSource: null,
   showAllUpcomingOdds: false,
-  isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:"
 };
 
 // ──────────────────────────────────────────────
@@ -47,6 +47,9 @@ window.addEventListener("message", (event) => {
         
         // Đồng thời lưu vào localStorage làm dự phòng
         localStorage.setItem("wc2026_manual_odds", JSON.stringify(state.manualOdds));
+      }
+      if (args.hasOwnProperty("is_local")) {
+        state.isLocal = args.is_local;
       }
       // Vẽ lại giao diện
       renderAll();
@@ -519,36 +522,36 @@ const BRACKET_TEMPLATE = [
   // Round of 32 (16 matches)
   [
     // Left Branch
-    { id: 74, label: "Trận 74", t1: "Nhất E", t2: "Ba A/B/C/D/F", fallbackDate: "30/06 05:00" },
-    { id: 77, label: "Trận 77", t1: "Nhất I", t2: "Ba C/D/F/G/H", fallbackDate: "01/07 06:00" },
-    { id: 73, label: "Trận 73", t1: "Nhì A", t2: "Nhì B", fallbackDate: "29/06 08:00" },
+    { id: 74, label: "Trận 74", t1: "Nhất E", t2: "Ba A/B/C/D/F", fallbackDate: "30/06 03:30" },
+    { id: 77, label: "Trận 77", t1: "Nhất I", t2: "Ba C/D/F/G/H", fallbackDate: "01/07 04:00" },
+    { id: 73, label: "Trận 73", t1: "Nhì A", t2: "Nhì B", fallbackDate: "29/06 02:00" },
     { id: 75, label: "Trận 75", t1: "Nhất F", t2: "Nhì C", fallbackDate: "30/06 08:00" },
-    { id: 76, label: "Trận 76", t1: "Nhất C", t2: "Nhì F", fallbackDate: "30/06 08:00" },
-    { id: 78, label: "Trận 78", t1: "Nhì E", t2: "Nhì I", fallbackDate: "01/07 08:00" },
+    { id: 76, label: "Trận 76", t1: "Nhất C", t2: "Nhì F", fallbackDate: "30/06 00:00" },
+    { id: 78, label: "Trận 78", t1: "Nhì E", t2: "Nhì I", fallbackDate: "01/07 00:00" },
     { id: 79, label: "Trận 79", t1: "Nhất A", t2: "Ba C/E/F/H/I", fallbackDate: "01/07 08:00" },
-    { id: 80, label: "Trận 80", t1: "Nhất L", t2: "Ba E/H/I/J/K", fallbackDate: "02/07 05:00" },
+    { id: 80, label: "Trận 80", t1: "Nhất L", t2: "Ba E/H/I/J/K", fallbackDate: "02/07 03:00" },
     // Right Branch
-    { id: 83, label: "Trận 83", t1: "Nhì K", t2: "Nhì L", fallbackDate: "03/07 05:00" },
-    { id: 84, label: "Trận 84", t1: "Nhất H", t2: "Nhì J", fallbackDate: "03/07 08:00" },
-    { id: 81, label: "Trận 81", t1: "Nhất D", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 08:00" },
-    { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "02/07 08:00" },
-    { id: 86, label: "Trận 86", t1: "Nhất J", t2: "Nhì H", fallbackDate: "04/07 05:00" },
-    { id: 88, label: "Trận 88", t1: "Nhì D", t2: "Nhì G", fallbackDate: "04/07 08:00" },
-    { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "03/07 08:00" },
-    { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "04/07 08:00" }
+    { id: 83, label: "Trận 83", t1: "Nhì K", t2: "Nhì L", fallbackDate: "02/07 00:00" },
+    { id: 84, label: "Trận 84", t1: "Nhất H", t2: "Nhì J", fallbackDate: "02/07 04:00" },
+    { id: 81, label: "Trận 81", t1: "Nhất D", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 07:00" },
+    { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "01/07 23:00" },
+    { id: 86, label: "Trận 86", t1: "Nhất J", t2: "Nhì H", fallbackDate: "03/07 06:00" },
+    { id: 88, label: "Trận 88", t1: "Nhì D", t2: "Nhì G", fallbackDate: "03/07 02:00" },
+    { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "02/07 08:00" },
+    { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "03/07 10:00" }
   ],
   // Round of 16 (8 matches)
   [
     // Left Branch
-    { id: 89, label: "Trận 89", t1: "Thắng Trận 74", t2: "Thắng Trận 77", fallbackDate: "05/07 03:00" },
-    { id: 90, label: "Trận 90", t1: "Thắng Trận 73", t2: "Thắng Trận 75", fallbackDate: "05/07 08:00" },
+    { id: 89, label: "Trận 89", t1: "Thắng Trận 74", t2: "Thắng Trận 77", fallbackDate: "05/07 04:00" },
+    { id: 90, label: "Trận 90", t1: "Thắng Trận 73", t2: "Thắng Trận 75", fallbackDate: "05/07 00:00" },
     { id: 91, label: "Trận 91", t1: "Thắng Trận 76", t2: "Thắng Trận 78", fallbackDate: "06/07 03:00" },
-    { id: 92, label: "Trận 92", t1: "Thắng Trận 79", t2: "Thắng Trận 80", fallbackDate: "06/07 08:00" },
+    { id: 92, label: "Trận 92", t1: "Thắng Trận 79", t2: "Thắng Trận 80", fallbackDate: "06/07 07:00" },
     // Right Branch
-    { id: 93, label: "Trận 93", t1: "Thắng Trận 83", t2: "Thắng Trận 84", fallbackDate: "07/07 04:00" },
-    { id: 94, label: "Trận 94", t1: "Thắng Trận 81", t2: "Thắng Trận 82", fallbackDate: "07/07 08:00" },
-    { id: 95, label: "Trận 95", t1: "Thắng Trận 86", t2: "Thắng Trận 88", fallbackDate: "08/07 05:00" },
-    { id: 96, label: "Trận 96", t1: "Thắng Trận 85", t2: "Thắng Trận 87", fallbackDate: "08/07 08:00" }
+    { id: 93, label: "Trận 93", t1: "Thắng Trận 83", t2: "Thắng Trận 84", fallbackDate: "07/07 02:00" },
+    { id: 94, label: "Trận 94", t1: "Thắng Trận 81", t2: "Thắng Trận 82", fallbackDate: "07/07 07:00" },
+    { id: 95, label: "Trận 95", t1: "Thắng Trận 86", t2: "Thắng Trận 88", fallbackDate: "07/07 23:00" },
+    { id: 96, label: "Trận 96", t1: "Thắng Trận 85", t2: "Thắng Trận 87", fallbackDate: "08/07 03:00" }
   ],
   // Quarter-finals (4 matches)
   [
@@ -1735,6 +1738,131 @@ function renderOddsResults() {
         <div class="odds-stat-sub">Hiện tại: ${ouLeaderText}</div>
       </div>
     `;
+  }
+
+  // Bảng tổng kết theo lượt trận (chỉ hiện trên localhost)
+  const roundSummaryContainer = document.getElementById("odds-round-summary-container");
+  if (roundSummaryContainer) {
+    if (state.isLocal) {
+      roundSummaryContainer.style.display = "block";
+      
+      const rounds = [
+        { key: "l1", label: "Lượt 1 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 1 || m.round === "1") },
+        { key: "l2", label: "Lượt 2 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 2 || m.round === "2") },
+        { key: "l3", label: "Lượt 3 Vòng Bảng", filter: m => VALID_GROUPS.includes(m.group) && (m.round === 3 || m.round === "3") },
+        { key: "ko", label: "Vòng KO", filter: m => !VALID_GROUPS.includes(m.group) }
+      ];
+      
+      const summaryRows = [];
+      let grandTotal = 0;
+      let grandFavWins = 0;
+      let grandDogWins = 0;
+      let grandPushH = 0;
+      let grandOvers = 0;
+      let grandUnders = 0;
+      let grandPushOU = 0;
+      
+      rounds.forEach(r => {
+        const roundMatches = completed.filter(r.filter);
+        let total = 0;
+        let favWins = 0, dogWins = 0, pushH = 0;
+        let overs = 0, unders = 0, pushOU = 0;
+        
+        roundMatches.forEach(m => {
+          const odds = getMatchOdds(m);
+          if (odds) {
+            total++;
+            const hRes = calcHandicapResult(m, odds);
+            const ouRes = calcOUResult(m, odds);
+            
+            if (hRes === "fav_win") favWins++;
+            else if (hRes === "dog_win") dogWins++;
+            else pushH++;
+            
+            if (ouRes?.result === "over") overs++;
+            else if (ouRes?.result === "under") unders++;
+            else pushOU++;
+          }
+        });
+        
+        grandTotal += total;
+        grandFavWins += favWins;
+        grandDogWins += dogWins;
+        grandPushH += pushH;
+        grandOvers += overs;
+        grandUnders += unders;
+        grandPushOU += pushOU;
+        
+        const hDiff = favWins - dogWins;
+        const hDiffText = hDiff > 0 ? `<span class="text-green">Trên +${hDiff}</span>` : hDiff < 0 ? `<span class="text-pink">Dưới +${Math.abs(hDiff)}</span>` : `<span style="color:var(--text-muted)">0</span>`;
+        const hPctText = total > 0 ? `${Math.round((favWins / total) * 100)}%` : "-";
+        
+        const ouDiff = overs - unders;
+        const ouDiffText = ouDiff > 0 ? `<span class="text-green">Tài +${ouDiff}</span>` : ouDiff < 0 ? `<span class="text-pink">Xỉu +${Math.abs(ouDiff)}</span>` : `<span style="color:var(--text-muted)">0</span>`;
+        const ouPctText = total > 0 ? `${Math.round((overs / total) * 100)}%` : "-";
+        
+        summaryRows.push(`
+          <tr>
+            <td style="font-weight:700; color:var(--accent-cyan);">${r.label}</td>
+            <td style="text-align:center; font-weight:700;">${total}</td>
+            <td style="text-align:center;"><span class="text-green">${favWins}</span> - <span class="text-pink">${dogWins}</span> - <span style="color:var(--text-muted)">${pushH}</span></td>
+            <td style="text-align:center; font-weight:700;">${hDiffText}</td>
+            <td style="text-align:center;">${hPctText}</td>
+            <td style="text-align:center;"><span class="text-green">${overs}</span> - <span class="text-pink">${unders}</span> - <span style="color:var(--text-muted)">${pushOU}</span></td>
+            <td style="text-align:center; font-weight:700;">${ouDiffText}</td>
+            <td style="text-align:center;">${ouPctText}</td>
+          </tr>
+        `);
+      });
+      
+      const totalHDiff = grandFavWins - grandDogWins;
+      const totalHDiffText = totalHDiff > 0 ? `<span class="text-green">Trên +${totalHDiff}</span>` : totalHDiff < 0 ? `<span class="text-pink">Dưới +${Math.abs(totalHDiff)}</span>` : `0`;
+      const totalHPctText = grandTotal > 0 ? `${Math.round((grandFavWins / grandTotal) * 100)}%` : "-";
+      
+      const totalOUDiff = grandOvers - grandUnders;
+      const totalOUDiffText = totalOUDiff > 0 ? `<span class="text-green">Tài +${totalOUDiff}</span>` : totalOUDiff < 0 ? `<span class="text-pink">Xỉu +${Math.abs(totalOUDiff)}</span>` : `0`;
+      const totalOUPctText = grandTotal > 0 ? `${Math.round((grandOvers / grandTotal) * 100)}%` : "-";
+      
+      roundSummaryContainer.innerHTML = `
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); padding:16px; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+          <h4 style="margin: 0 0 12px 0; font-size:13px; font-weight:800; color:var(--accent-cyan); display:flex; align-items:center; gap:6px;">
+            📊 TỔNG KẾT KÈO THEO LƯỢT TRẬN (Chỉ hiển thị trên Localhost)
+          </h4>
+          <div class="odds-table-wrap" style="margin: 0; border:none; max-height:none; overflow-x:auto;">
+            <table class="odds-table" style="margin:0; width:100%; border-collapse:collapse; min-width:650px;">
+              <thead>
+                <tr>
+                  <th style="text-align:left; font-size:11px;">Lượt Trận</th>
+                  <th style="text-align:center; font-size:11px; width:70px;">Số Trận</th>
+                  <th style="text-align:center; font-size:11px;">Kèo Chấp (Trên-Dưới-Hòa)</th>
+                  <th style="text-align:center; font-size:11px; width:100px;">Chênh Lệch</th>
+                  <th style="text-align:center; font-size:11px; width:80px;">% Trên</th>
+                  <th style="text-align:center; font-size:11px;">Tài Xỉu (Tài-Xỉu-Hòa)</th>
+                  <th style="text-align:center; font-size:11px; width:100px;">Chênh Lệch</th>
+                  <th style="text-align:center; font-size:11px; width:80px;">% Tài</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${summaryRows.join("")}
+                <tr style="background:rgba(6, 182, 212, 0.08); font-weight:800; border-top:2px solid rgba(6, 182, 212, 0.3);">
+                  <td style="color:#fff;">TỔNG CỘNG</td>
+                  <td style="text-align:center;">${grandTotal}</td>
+                  <td style="text-align:center;"><span class="text-green">${grandFavWins}</span> - <span class="text-pink">${grandDogWins}</span> - <span style="color:var(--text-muted)">${grandPushH}</span></td>
+                  <td style="text-align:center;">${totalHDiffText}</td>
+                  <td style="text-align:center;">${totalHPctText}</td>
+                  <td style="text-align:center;"><span class="text-green">${grandOvers}</span> - <span class="text-pink">${grandUnders}</span> - <span style="color:var(--text-muted)">${grandPushOU}</span></td>
+                  <td style="text-align:center;">${totalOUDiffText}</td>
+                  <td style="text-align:center;">${totalOUPctText}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } else {
+      roundSummaryContainer.style.display = "none";
+      roundSummaryContainer.innerHTML = "";
+    }
   }
 }
 
