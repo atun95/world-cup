@@ -863,21 +863,52 @@ async function syncOfficialData(showAlert = false) {
   setSyncingUI(true);
 
   try {
-    const source = OFFICIAL_DATA_SOURCES[0];
-    const res = await fetch(source.url, { cache: "no-store" });
-    if (!res.ok) throw new Error("Không thể kết nối máy chủ dữ liệu chính thức.");
+    let dataLoaded = false;
+    let parsedMatches = [];
+    let sourceUsed = "";
+    let sourceDesc = "";
 
-    const data = await res.json();
-    if (!data.matches || !Array.isArray(data.matches)) throw new Error("Dữ liệu không hợp lệ.");
+    // 1. Thử tải từ TheSportsDB trước (sử dụng key thử nghiệm '3' hoặc key có sẵn)
+    try {
+      const theSportsDbUrl = "https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=136004&s=2026";
+      const res = await fetch(theSportsDbUrl, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.events && Array.isArray(data.events) && data.events.length > 0) {
+          parsedMatches = parseSportsDbEvents(data.events);
+          if (parsedMatches.length > 0) {
+            dataLoaded = true;
+            sourceUsed = "TheSportsDB";
+            sourceDesc = "Dữ liệu World Cup từ TheSportsDB API";
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Lỗi tải từ TheSportsDB, chuyển sang openfootball:", e);
+    }
 
-    const parsed = parseApiMatches(data.matches);
-    if (parsed.length === 0) throw new Error("Không tìm thấy trận đấu hợp lệ từ nguồn chính thức.");
+    // 2. Dự phòng: tải từ openfootball (mặc định luôn chạy tốt)
+    if (!dataLoaded) {
+      const openFootballUrl = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
+      const res = await fetch(openFootballUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("Không thể kết nối máy chủ dữ liệu chính thức.");
 
-    state.matches = parsed;
+      const data = await res.json();
+      if (!data.matches || !Array.isArray(data.matches)) throw new Error("Dữ liệu không hợp lệ.");
+
+      parsedMatches = parseApiMatches(data.matches);
+      if (parsedMatches.length === 0) throw new Error("Không tìm thấy trận đấu hợp lệ từ nguồn chính thức.");
+      
+      dataLoaded = true;
+      sourceUsed = "openfootball";
+      sourceDesc = "Dữ liệu World Cup từ openfootball GitHub";
+    }
+
+    state.matches = parsedMatches;
     state.lastSync = new Date().toISOString();
-    state.syncSource = source.name;
+    state.syncSource = sourceUsed;
 
-    // 2. Đồng bộ tỷ lệ kèo nếu có API Key (giới hạn tần suất để tránh hết lượt API miễn phí)
+    // 3. Đồng bộ tỷ lệ kèo nếu có API Key (giới hạn tần suất để tránh hết lượt API miễn phí)
     const apiKey = localStorage.getItem("wc2026_odds_api_key");
     let oddsSynced = false;
     let oddsErrorMsg = "";
@@ -903,16 +934,16 @@ async function syncOfficialData(showAlert = false) {
     saveMatches();
     renderAll();
 
-    const completed = parsed.filter(m => m.status === "completed").length;
-    const live = parsed.filter(m => m.status === "live").length;
-    const groupCompleted = parsed.filter(m => m.status === "completed" && VALID_GROUPS.includes(m.group)).length;
+    const completed = parsedMatches.filter(m => m.status === "completed").length;
+    const live = parsedMatches.filter(m => m.status === "live").length;
+    const groupCompleted = parsedMatches.filter(m => m.status === "completed" && VALID_GROUPS.includes(m.group)).length;
 
     if (showAlert) {
       let msg = `Cập nhật thành công từ nguồn chính thức!\n` +
         `📊 Bảng xếp hạng: tính từ ${groupCompleted} trận vòng bảng\n` +
         `⚽ Tổng: ${completed} trận có kết quả` +
         (live ? `\n🔴 ${live} trận đang diễn ra` : "") +
-        `\nNguồn: ${source.description}`;
+        `\nNguồn: ${sourceDesc}`;
 
       if (apiKey) {
         if (oddsSynced) {
@@ -1050,6 +1081,86 @@ function parseApiMatches(apiMatches) {
       score2,
       minute,
       ground: m.ground || null
+    });
+  });
+
+  results.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+  return results;
+}
+
+function parseSportsDbEvents(events) {
+  const now = new Date();
+  const results = [];
+  let idCounter = 1;
+
+  const existingMap = {};
+  state.matches.forEach(m => {
+    const key = `${m.team1?.id}_${m.team2?.id}_${m.date}`;
+    existingMap[key] = m;
+  });
+
+  events.forEach(ev => {
+    const team1 = getTeamFromMap(ev.strHomeTeam);
+    const team2 = getTeamFromMap(ev.strAwayTeam);
+    if (!team1 || !team2) return;
+
+    const knownT1 = TEAMS.find(t => t.id === team1.id);
+    const knownT2 = TEAMS.find(t => t.id === team2.id);
+    if (!knownT1 || !knownT2) return;
+
+    let group = "Vòng loại trực tiếp";
+    if (knownT1.group === knownT2.group && VALID_GROUPS.includes(knownT1.group)) {
+      group = knownT1.group;
+    }
+
+    const date = ev.dateEvent || "";
+    const time = ev.strTime ? ev.strTime.substring(0, 5) : "18:00";
+    
+    let roundNum = 1;
+    if (date) {
+      const day = parseInt(date.split("-")[2]) || 11;
+      if (day >= 23) roundNum = 3;
+      else if (day >= 17) roundNum = 2;
+    }
+
+    let status = "upcoming";
+    let score1 = null;
+    let score2 = null;
+    let minute = null;
+
+    if (ev.strStatus === "Match Finished") {
+      status = "completed";
+      score1 = ev.intHomeScore !== null ? parseInt(ev.intHomeScore) : 0;
+      score2 = ev.intAwayScore !== null ? parseInt(ev.intAwayScore) : 0;
+    } else if (ev.strStatus === "Not Started") {
+      status = "upcoming";
+    } else if (ev.strStatus && (ev.strStatus.includes("Half") || ev.strStatus.includes("Live") || ev.strStatus.includes("In Progress"))) {
+      status = "live";
+      score1 = ev.intHomeScore !== null ? parseInt(ev.intHomeScore) : 0;
+      score2 = ev.intAwayScore !== null ? parseInt(ev.intAwayScore) : 0;
+      minute = 45;
+    } else if (ev.intHomeScore !== null && ev.intAwayScore !== null) {
+      status = "completed";
+      score1 = parseInt(ev.intHomeScore);
+      score2 = parseInt(ev.intAwayScore);
+    }
+
+    const key = `${team1.id}_${team2.id}_${date}`;
+    const existing = existingMap[key];
+
+    results.push({
+      id: existing ? existing.id : idCounter++,
+      team1,
+      team2,
+      date,
+      time,
+      group,
+      round: roundNum,
+      status,
+      score1,
+      score2,
+      minute,
+      ground: ev.strVenue || null
     });
   });
 
