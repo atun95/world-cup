@@ -154,6 +154,43 @@
           <span class="sync-status-warn">⚠️ Đang tải dữ liệu...</span>
         </div>
         <div class="standings-grid" id="standings-grid-container"></div>
+        
+        <!-- Bảng xếp hạng các đội thứ 3 -->
+        <div id="thirds-standing-section" class="thirds-standing-section">
+          <h3>🏆 BẢNG XẾP HẠNG CÁC ĐỘI HẠNG 3 TỐT NHẤT</h3>
+          <div class="thirds-standing-card">
+            <table class="standing-table thirds-table">
+              <thead>
+                <tr>
+                  <th style="width:36px">#</th>
+                  <th>Đội tuyển</th>
+                  <th style="width:70px; text-align:center">Bảng</th>
+                  <th title="Số trận" style="width:40px; text-align:center">ST</th>
+                  <th title="Thắng" style="width:40px; text-align:center">T</th>
+                  <th title="Hòa" style="width:40px; text-align:center">H</th>
+                  <th title="Thua" style="width:40px; text-align:center">B</th>
+                  <th title="Bàn thắng" style="width:45px; text-align:center">BT</th>
+                  <th title="Bàn thua" style="width:45px; text-align:center">BH</th>
+                  <th title="Hiệu số" style="width:50px; text-align:center">HS</th>
+                  <th title="Điểm" style="width:50px; text-align:center">Đ</th>
+                </tr>
+              </thead>
+              <tbody id="thirds-standing-tbody">
+                <!-- Javascript will render here -->
+              </tbody>
+            </table>
+          </div>
+          <div class="thirds-note-container">
+            <div class="thirds-note-item">
+              <span class="thirds-note-dot pass"></span>
+              <span>Đi tiếp vào Vòng 32 (Top 8 đội hạng 3 xuất sắc nhất)</span>
+            </div>
+            <div class="thirds-note-item">
+              <span class="thirds-note-dot fail"></span>
+              <span>Bị loại (4 đội hạng 3 cuối bảng)</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Tab 3: Odds Results -->

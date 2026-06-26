@@ -2291,4 +2291,81 @@ header {
     font-size: 9.5px;
     padding-left: 2px;
   }
+}
+
+/* ── BẢNG XẾP HẠNG ĐỘI HẠNG 3 TỐT NHẤT ── */
+.thirds-standing-section {
+  margin-top: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.thirds-standing-section h3 {
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border-glass);
+  background: linear-gradient(90deg, rgba(255, 209, 77, 0.1), transparent);
+  color: var(--accent-yellow);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thirds-standing-card {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.standing-table tr.qualify-thirds-pass td:first-child {
+  border-left: 3px solid var(--accent-green);
+  background: rgba(0, 240, 128, 0.02);
+}
+
+.standing-table tr.qualify-thirds-fail {
+  opacity: 0.55;
+}
+
+.standing-table tr.qualify-thirds-fail td:first-child {
+  border-left: 3px solid var(--text-muted);
+}
+
+.thirds-note-container {
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.015);
+  border-top: 1px solid var(--border-glass);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.thirds-note-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+.thirds-note-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.thirds-note-dot.pass {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.thirds-note-dot.fail {
+  background: var(--text-muted);
 }

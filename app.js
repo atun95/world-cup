@@ -535,6 +535,51 @@ function renderStandings() {
       </table>`;
     container.appendChild(card);
   });
+
+  // Render bảng xếp hạng các đội hạng 3 tốt nhất
+  const thirdsTbody = document.getElementById("thirds-standing-tbody");
+  if (thirdsTbody) {
+    const thirdPlacedTeams = [];
+    VALID_GROUPS.forEach(g => {
+      const groupTeams = standings[g];
+      if (groupTeams && groupTeams.length >= 3) {
+        thirdPlacedTeams.push({
+          group: g,
+          team: groupTeams[2]
+        });
+      }
+    });
+
+    thirdPlacedTeams.sort((a, b) => {
+      const tA = a.team;
+      const tB = b.team;
+      return tB.pts !== tA.pts ? tB.pts - tA.pts :
+        tB.gd !== tA.gd ? tB.gd - tA.gd :
+          tB.gf !== tA.gf ? tB.gf - tA.gf :
+            tB.rating - tA.rating;
+    });
+
+    thirdsTbody.innerHTML = thirdPlacedTeams.map((item, idx) => {
+      const t = item.team;
+      const isQualify = idx < 8;
+      const rowClass = isQualify ? "qualify-thirds-pass" : "qualify-thirds-fail";
+      return `
+        <tr class="${rowClass}">
+          <td class="td-rank">${idx + 1}</td>
+          <td><div class="td-team"><span class="td-flag">${getFlagHtml(t.emoji, t.name, "normal")}</span>${t.name}</div></td>
+          <td style="text-align:center; font-weight: 600; color: var(--accent-cyan);">Bảng ${item.group}</td>
+          <td style="text-align:center">${t.played}</td>
+          <td style="text-align:center">${t.won}</td>
+          <td style="text-align:center">${t.drawn}</td>
+          <td style="text-align:center">${t.lost}</td>
+          <td style="text-align:center">${t.gf}</td>
+          <td style="text-align:center">${t.ga}</td>
+          <td style="text-align:center">${t.gd >= 0 ? "+" + t.gd : t.gd}</td>
+          <td class="td-pts" style="text-align:center">${t.pts}</td>
+        </tr>
+      `;
+    }).join("");
+  }
 }
 
 // ──────────────────────────────────────────────

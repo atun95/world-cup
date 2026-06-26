@@ -38,5 +38,65 @@
     "favoriteId": "colombia",
     "handicap": 1,
     "overUnder": 2.5
+  },
+  "bosnia_qatar_group": {
+    "favoriteId": "bosnia",
+    "handicap": 1.5,
+    "overUnder": 2.5
+  },
+  "canada_switzerland_group": {
+    "favoriteId": "switzerland",
+    "handicap": 0.25,
+    "overUnder": 2.5
+  },
+  "haiti_morocco_group": {
+    "favoriteId": "morocco",
+    "handicap": 2,
+    "overUnder": 2.5
+  },
+  "brazil_scotland_group": {
+    "favoriteId": "brazil",
+    "handicap": 1.5,
+    "overUnder": 2.5
+  },
+  "south_africa_south_korea_group": {
+    "favoriteId": "south_korea",
+    "handicap": 0.75,
+    "overUnder": 2.5
+  },
+  "czechia_mexico_group": {
+    "favoriteId": "mexico",
+    "handicap": 0.75,
+    "overUnder": 2.5
+  },
+  "curacao_ivory_coast_group": {
+    "favoriteId": "ivory_coast",
+    "handicap": 2.25,
+    "overUnder": 3.25
+  },
+  "ecuador_germany_group": {
+    "favoriteId": "germany",
+    "handicap": 1,
+    "overUnder": 2.75
+  },
+  "netherlands_tunisia_group": {
+    "favoriteId": "netherlands",
+    "handicap": 2.5,
+    "overUnder": 3.25
+  },
+  "japan_sweden_group": {
+    "favoriteId": "japan",
+    "handicap": 0.5,
+    "overUnder": 2.5
+  },
+  "australia_paraguay_group": {
+    "favoriteId": "paraguay",
+    "handicap": 0.25,
+    "overUnder": 2.5
+  },
+  "turkey_usa_group": {
+    "favoriteId": "usa",
+    "handicap": 0.25,
+    "overUnder": 2.5
   }
 }
