@@ -21,7 +21,7 @@ st.markdown("""
         iframe {
             display: block;
             width: 100vw !important;
-            max-width: 1400px !important;
+            max-width: 100% !important;
             margin: 0 auto !important;
             border: none !important;
             /* Khóa không cho lag/giật khi cuộn */

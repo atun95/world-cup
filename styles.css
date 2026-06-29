@@ -2375,9 +2375,18 @@ body.ko-tab-active .dashboard-grid {
   display: none !important; /* Hide dashboard statistics in KO tab to save 120px height */
 }
 
+body.ko-tab-active .live-banner {
+  display: none !important; /* Hide live ticker banner in KO tab to save 48px height */
+}
+
+body.ko-tab-active header {
+  padding: 6px 16px !important; /* Shrink header padding to save 14px height */
+}
+
 body.ko-tab-active .container {
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 10px 12px !important;
 }
 
 body.ko-tab-active .nav-tabs {
