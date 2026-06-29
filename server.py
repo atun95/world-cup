@@ -61,13 +61,13 @@ local_ip = get_local_ip()
 with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
     print(f"\n=======================================================")
     print(f" Server local ho tro ghi file dang chay tai:")
-    print(f" - Máy tính của bạn:  http://localhost:{PORT}")
+    print(f" - May tinh cua ban:  http://localhost:{PORT}")
     if local_ip != '127.0.0.1':
-        print(f" - Điện thoại/IPAD:   http://{local_ip}:{PORT}")
+        print(f" - Dien thoai/IPAD:   http://{local_ip}:{PORT}")
     print(f"=======================================================")
-    print("Mở liên kết trên thiết bị cùng Wi-Fi để xem và nhập kèo.")
-    print("Kèo bạn nhập sẽ được ghi trực tiếp vào file manual_odds.json.")
-    print("Bấm Ctrl+C trong cửa sổ terminal này để dừng server.\n")
+    print("Mo lien ket tren thiet bi cung Wi-Fi de xem va nhap keo.")
+    print("Keo ban nhap se duoc ghi truc tiep vao file manual_odds.json.")
+    print("Bam Ctrl+C trong cua so terminal nay de dung server.\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

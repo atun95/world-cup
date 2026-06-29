@@ -419,7 +419,11 @@ function buildMatchCard(m) {
 
   // Footer info
   const dateStr = formatDate(m.date);
-  let goalsNote = isCompleted ? `Tổng: <strong>${(m.score1 || 0) + (m.score2 || 0)} bàn</strong>` : `Lượt ${m.round} • Bảng ${m.group}`;
+  const isGroupMatch = VALID_GROUPS.includes(m.group);
+  const badgeText = isGroupMatch ? `BẢNG ${m.group} • L${m.round}` : m.group;
+  let goalsNote = isCompleted
+    ? `Tổng: <strong>${(m.score1 || 0) + (m.score2 || 0)} bàn</strong>`
+    : (isGroupMatch ? `Lượt ${m.round} • Bảng ${m.group}` : m.group);
   if (!isCompleted) {
     goalsNote += ` <button onclick="event.stopPropagation(); showAiAnalysis(${m.id})" style="float:right; background:rgba(6, 182, 212, 0.15); border:1px solid rgba(6, 182, 212, 0.3); color:#06b6d4; padding:2.5px 8px; border-radius:4px; font-size:10.5px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:3px;">🤖 Dự đoán AI</button>`;
   }
@@ -451,7 +455,7 @@ function buildMatchCard(m) {
   return `
     <div class="match-card ${isLive ? "is-live" : ""}">
       <div class="match-header">
-        <span class="match-group-badge">BẢNG ${m.group} • L${m.round}</span>
+        <span class="match-group-badge">${badgeText}</span>
         <span class="match-datetime">${dateStr}</span>
         ${statusHtml}
       </div>
@@ -603,7 +607,7 @@ const BRACKET_TEMPLATE = [
     { id: 81, label: "Trận 81", t1: "Đội tuyển Mỹ (Nhất D)", t2: "Ba B/E/F/I/J", fallbackDate: "02/07 07:00" },
     { id: 82, label: "Trận 82", t1: "Nhất G", t2: "Ba A/E/H/I/J", fallbackDate: "02/07 03:00" },
     { id: 86, label: "Trận 86", t1: "Đội tuyển Argentina (Nhất J)", t2: "Nhì H", fallbackDate: "04/07 05:00" },
-    { id: 88, label: "Trận 88", t1: "Nhất D", t2: "Nhì G", fallbackDate: "04/07 01:00" },
+    { id: 88, label: "Trận 88", t1: "Nhì D", t2: "Nhì G", fallbackDate: "04/07 01:00" },
     { id: 85, label: "Trận 85", t1: "Nhất B", t2: "Ba E/F/G/I/J", fallbackDate: "03/07 10:00" },
     { id: 87, label: "Trận 87", t1: "Nhất K", t2: "Ba D/E/I/J/L", fallbackDate: "04/07 08:30" }
   ],
@@ -739,6 +743,25 @@ function resolveTeamRecursive(text, standings, bestThirds, depth = 0) {
 }
 
 function getMatchWinnerOrLoser(matchId, type, standings, bestThirds, depth) {
+  let match = state.matches.find(m => m.id === matchId);
+  if (match && match.team1 && !isPlaceholderTeam(match.team1.name) && match.team2 && !isPlaceholderTeam(match.team2.name)) {
+    if (match.status === "completed") {
+      let winner = null;
+      let loser = null;
+      if (match.score1 > match.score2) {
+        winner = match.team1;
+        loser = match.team2;
+      } else if (match.score2 > match.score1) {
+        winner = match.team2;
+        loser = match.team1;
+      } else {
+        winner = match.team1;
+        loser = match.team2;
+      }
+      return type === "winner" ? winner : loser;
+    }
+  }
+
   let foundNode = null;
   for (let r = 0; r < BRACKET_TEMPLATE.length; r++) {
     const node = BRACKET_TEMPLATE[r].find(n => n.id === matchId);
@@ -753,12 +776,12 @@ function getMatchWinnerOrLoser(matchId, type, standings, bestThirds, depth) {
   const resolvedT2 = resolveTeamRecursive(foundNode.t2, standings, bestThirds, depth);
 
   const knockoutMatches = state.matches.filter(m => !VALID_GROUPS.includes(m.group));
-  let match = null;
   if (resolvedT1.emoji && resolvedT2.emoji) {
-    match = knockoutMatches.find(m => {
+    const m = knockoutMatches.find(m => {
       return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
         (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
     });
+    if (m) match = m;
   }
 
   if (match && match.status === "completed") {
@@ -928,8 +951,8 @@ function renderKnockout() {
       const resolvedT1 = resolveTeamRecursive(node.t1, standings, bestThirds);
       const resolvedT2 = resolveTeamRecursive(node.t2, standings, bestThirds);
 
-      let match = null;
-      if (resolvedT1.emoji && resolvedT2.emoji) {
+      let match = state.matches.find(m => m.id === node.id);
+      if (!match && resolvedT1.emoji && resolvedT2.emoji) {
         match = knockoutMatches.find(m => {
           return (m.team1.name === resolvedT1.name && m.team2.name === resolvedT2.name) ||
             (m.team1.name === resolvedT2.name && m.team2.name === resolvedT1.name);
@@ -1154,12 +1177,15 @@ async function syncOfficialData(showAlert = false) {
 function parseApiMatches(apiMatches) {
   const now = new Date();
   const results = [];
-  let idCounter = 1;
+  let idCounter = 1000;
+  const usedIds = new Set();
 
   const existingMap = {};
   state.matches.forEach(m => {
-    const key = `${m.team1?.id}_${m.team2?.id}_${m.date}`;
-    existingMap[key] = m;
+    const key = getMatchKey(m);
+    if (key) {
+      existingMap[key] = m;
+    }
   });
 
   apiMatches.forEach(m => {
@@ -1253,11 +1279,27 @@ function parseApiMatches(apiMatches) {
       }
     }
 
-    const key = `${team1.id}_${team2.id}_${vnDate}`;
+    const tempMatch = { team1, team2, group };
+    const key = getMatchKey(tempMatch);
     const existing = existingMap[key];
 
+    let matchId;
+    if (m.num) {
+      matchId = m.num;
+      usedIds.add(matchId);
+    } else if (existing && !usedIds.has(existing.id)) {
+      matchId = existing.id;
+      usedIds.add(matchId);
+    } else {
+      while (usedIds.has(idCounter)) {
+        idCounter++;
+      }
+      matchId = idCounter++;
+      usedIds.add(matchId);
+    }
+
     results.push({
-      id: existing ? existing.id : idCounter++,
+      id: matchId,
       team1,
       team2,
       date: vnDate,
@@ -1279,12 +1321,15 @@ function parseApiMatches(apiMatches) {
 function parseSportsDbEvents(events) {
   const now = new Date();
   const results = [];
-  let idCounter = 1;
+  let idCounter = 1000;
+  const usedIds = new Set();
 
   const existingMap = {};
   state.matches.forEach(m => {
-    const key = `${m.team1?.id}_${m.team2?.id}_${m.date}`;
-    existingMap[key] = m;
+    const key = getMatchKey(m);
+    if (key) {
+      existingMap[key] = m;
+    }
   });
 
   events.forEach(ev => {
@@ -1333,11 +1378,24 @@ function parseSportsDbEvents(events) {
       score2 = parseInt(ev.intAwayScore);
     }
 
-    const key = `${team1.id}_${team2.id}_${date}`;
+    const tempMatch = { team1, team2, group };
+    const key = getMatchKey(tempMatch);
     const existing = existingMap[key];
 
+    let matchId;
+    if (existing && !usedIds.has(existing.id)) {
+      matchId = existing.id;
+      usedIds.add(matchId);
+    } else {
+      while (usedIds.has(idCounter)) {
+        idCounter++;
+      }
+      matchId = idCounter++;
+      usedIds.add(matchId);
+    }
+
     results.push({
-      id: existing ? existing.id : idCounter++,
+      id: matchId,
       team1,
       team2,
       date,

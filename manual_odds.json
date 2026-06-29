@@ -98,5 +98,45 @@
     "favoriteId": "usa",
     "handicap": 0.25,
     "overUnder": 2.5
+  },
+  "algeria_argentina_group": {
+    "favoriteId": "argentina",
+    "handicap": 2,
+    "overUnder": 2.75
+  },
+  "france_norway_group": {
+    "favoriteId": "france",
+    "handicap": 1,
+    "overUnder": 2.5
+  },
+  "spain_uruguay_group": {
+    "favoriteId": "spain",
+    "handicap": 0.75,
+    "overUnder": 2.5
+  },
+  "cape_verde_saudi_arabia_group": {
+    "favoriteId": "cape_verde",
+    "handicap": 0,
+    "overUnder": 2.5
+  },
+  "belgium_new_zealand_group": {
+    "favoriteId": "belgium",
+    "handicap": 2.25,
+    "overUnder": 2.5
+  },
+  "egypt_iran_group": {
+    "favoriteId": "egypt",
+    "handicap": 0.25,
+    "overUnder": 2.5
+  },
+  "england_panama_group": {
+    "favoriteId": "england",
+    "handicap": 2.25,
+    "overUnder": 3.25
+  },
+  "iraq_senegal_group": {
+    "favoriteId": "senegal",
+    "handicap": 2,
+    "overUnder": 2.5
   }
 }
