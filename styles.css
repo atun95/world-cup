@@ -2006,6 +2006,7 @@ header {
 
 .bracket-container {
   overflow-x: auto;
+  overflow-y: hidden !important; /* Prevent inner vertical scrolling, let the container stretch naturally */
   padding: 16px 12px;
   background: rgba(11, 15, 25, 0.4);
   border-radius: 16px;
@@ -2063,7 +2064,7 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 310px; /* Highly compact height so all rounds fit on screen without vertical scroll */
+  height: 520px; /* Vertically stretched to fit matches beautifully without any internal scroll */
 }
 
 .bracket-match-node {
@@ -2381,6 +2382,10 @@ body.ko-tab-active .live-banner {
 
 body.ko-tab-active header {
   padding: 6px 16px !important; /* Shrink header padding to save 14px height */
+}
+
+body.ko-tab-active #app-wrapper {
+  min-height: 780px !important; /* Force the vertical frame to stretch downwards */
 }
 
 body.ko-tab-active .container {
