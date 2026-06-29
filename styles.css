@@ -2063,15 +2063,15 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 380px; /* Highly compact height so all rounds fit on screen without vertical scroll */
+  height: 310px; /* Highly compact height so all rounds fit on screen without vertical scroll */
 }
 
 .bracket-match-node {
   background: linear-gradient(135deg, rgba(24, 24, 35, 0.8) 0%, rgba(15, 15, 22, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  padding: 3px 5px;
-  font-size: 9.5px;
+  padding: 2px 4px;
+  font-size: 9px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -2096,7 +2096,7 @@ header {
 .bracket-node-header {
   display: flex;
   justify-content: space-between;
-  font-size: 7.5px;
+  font-size: 7px;
   color: var(--text-muted);
   font-weight: 600;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -2108,7 +2108,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 15px;
+  height: 13px;
   color: var(--text-sub);
   transition: all 0.2s ease;
   border-radius: 3px;
@@ -2160,23 +2160,23 @@ header {
   }
 
   .bracket-column-title {
-    font-size: 7.5px;
-    padding: 4px 1px;
-    margin-bottom: 6px;
+    font-size: 7px;
+    padding: 3px 1px;
+    margin-bottom: 4px;
   }
 
   .bracket-match-node {
-    padding: 3px 4px;
-    font-size: 9px;
-    border-radius: 6px;
+    padding: 2px 3px;
+    font-size: 8.5px;
+    border-radius: 5px;
   }
 
   .bracket-node-header {
-    font-size: 7.5px;
+    font-size: 7px;
   }
 
   .bracket-node-team {
-    height: 15px;
+    height: 13px;
   }
 
   .bracket-team-name {
@@ -2184,7 +2184,7 @@ header {
   }
 
   .bracket-team-score {
-    font-size: 9.5px;
+    font-size: 9px;
     padding-left: 1px;
   }
 }
@@ -2368,4 +2368,22 @@ header {
 
 .thirds-note-dot.fail {
   background: var(--text-muted);
+}
+
+/* ── CONDITIONAL LAYOUT WHEN KO TAB IS ACTIVE ── */
+body.ko-tab-active .dashboard-grid {
+  display: none !important; /* Hide dashboard statistics in KO tab to save 120px height */
+}
+
+body.ko-tab-active .container {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+body.ko-tab-active .nav-tabs {
+  margin-bottom: 10px !important;
+}
+
+body.ko-tab-active .ko-format-details {
+  margin-bottom: 8px !important;
 }

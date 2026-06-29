@@ -1032,6 +1032,12 @@ function switchTab(tabId, el) {
   const tab = document.getElementById(tabId);
   if (tab) tab.classList.add("active");
 
+  if (tabId === "knockout-tab") {
+    document.body.classList.add("ko-tab-active");
+  } else {
+    document.body.classList.remove("ko-tab-active");
+  }
+
   if (tabId === "matches-tab") {
     renderMatches();
   } else if (tabId === "standings-tab") {
